@@ -199,10 +199,22 @@ function timezonePrefersFahrenheit(timezone) {
 }
 
 function temperatureUnitSymbol() {
-  var unit = normalizeTemperatureUnit(state.temperatureUnit);
-  if (unit === "\u00B0F") return "\u00B0F";
-  if (unit === "\u00B0C") return "\u00B0C";
-  return timezonePrefersFahrenheit(state.timezone) ? "\u00B0F" : "\u00B0C";
+  return "\u00B0";
+}
+
+function displayUnitText(value) {
+  var unit = String(value == null ? "" : value).trim();
+  var lower = unit.toLowerCase();
+  if (
+    lower === "\u00B0c" || lower === "\u00B0f" ||
+    lower === "deg c" || lower === "deg f" ||
+    lower === "degree c" || lower === "degree f" ||
+    lower === "degrees c" || lower === "degrees f" ||
+    lower === "celsius" || lower === "fahrenheit"
+  ) {
+    return "\u00B0";
+  }
+  return unit;
 }
 
 function clockBarTemperatureUnitSymbol() {

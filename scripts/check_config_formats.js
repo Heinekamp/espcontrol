@@ -201,9 +201,13 @@ assert.strictEqual(hooks.normalizeScreensaverAction("Screen Dimmed"), "dim", "di
 assert.strictEqual(hooks.screensaverActionOption("dim"), "Screen Dimmed", "dimmed screensaver action option");
 assert.strictEqual(hooks.normalizeScreensaverDimmedBrightness(0), 10, "dimmed screensaver brightness fallback");
 assert.strictEqual(hooks.normalizeScreensaverDimmedBrightness(101), 100, "dimmed screensaver brightness maximum");
-assert.strictEqual(hooks.temperatureUnitSymbolFor("America/New_York (GMT-5)", "Auto"), "°F", "auto unit for US timezone");
-assert.strictEqual(hooks.temperatureUnitSymbolFor("Europe/London (GMT+0)", "Auto"), "°C", "auto unit for UK timezone");
-assert.strictEqual(hooks.temperatureUnitSymbolFor("Europe/London (GMT+0)", "°F"), "°F", "manual fahrenheit override");
+assert.strictEqual(hooks.temperatureUnitSymbolFor("America/New_York (GMT-5)", "Auto"), "°", "auto unit for US timezone displays degree-only suffix");
+assert.strictEqual(hooks.temperatureUnitSymbolFor("Europe/London (GMT+0)", "Auto"), "°", "auto unit for UK timezone displays degree-only suffix");
+assert.strictEqual(hooks.temperatureUnitSymbolFor("Europe/London (GMT+0)", "°F"), "°", "manual fahrenheit override displays degree-only suffix");
+assert.strictEqual(hooks.displayUnitText("deg C"), "°", "legacy deg C unit displays degree-only suffix");
+assert.strictEqual(hooks.displayUnitText("deg F"), "°", "legacy deg F unit displays degree-only suffix");
+assert.strictEqual(hooks.displayUnitText("°C"), "°", "celsius unit displays degree-only suffix");
+assert.strictEqual(hooks.displayUnitText("kWh"), "kWh", "non-temperature unit is preserved");
 assert.strictEqual(hooks.networkPreviewIconSlug("wifi", 0), "wifi-strength-1", "wifi preview first strength icon");
 assert.strictEqual(hooks.networkPreviewIconSlug("wifi", 49), "wifi-strength-2", "wifi preview second strength icon");
 assert.strictEqual(hooks.networkPreviewIconSlug("wifi", 74), "wifi-strength-3", "wifi preview third strength icon");

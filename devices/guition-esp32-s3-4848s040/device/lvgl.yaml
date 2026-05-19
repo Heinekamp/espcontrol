@@ -16,7 +16,7 @@ lvgl:
     widgets:
       # Indoor/outdoor temperature (top-left)
       - label:
-          text: "-°C / -°C"
+          text: "-° / -°"
           id: temperatures
           text_font: clockbar_font_sm
           align: top_left

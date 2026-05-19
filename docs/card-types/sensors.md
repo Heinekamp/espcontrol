@@ -23,7 +23,7 @@ Sensor cards are read-only — tapping them does nothing.
 
 For **Numeric** mode:
 
-1. Set a **Unit** — the unit label shown next to the value, for example `°C`, `%`, `W`, or `kWh`.
+1. Set a **Unit** — the unit label shown next to the value, for example `°`, `%`, `W`, or `kWh`. Temperature units such as `°C`, `°F`, `deg C`, and `deg F` display as `°`.
 2. Set a **Label** if you want custom text under the value. If left blank, the entity name from Home Assistant is used.
 3. Set **Unit Precision** if you want one or two decimal places.
 4. On a **Large** card, turn on **Large Sensor Numbers** if you want the top sensor readout scaled much larger.
@@ -44,7 +44,7 @@ For **Text** mode:
 
 | Entity | Mode | Unit | What it shows |
 |---|---|---|---|
-| `sensor.living_room_temperature` | Numeric | `°C` | Indoor temperature |
+| `sensor.living_room_temperature` | Numeric | `°` | Indoor temperature |
 | `sensor.solar_power` | Numeric | `W` | Current solar generation |
 | `sensor.humidity` | Numeric | `%` | Relative humidity |
 | `text_sensor.washing_machine_status` | Text |  | `Running`, `Rinsing`, or `Finished` |

@@ -205,7 +205,7 @@ registerButtonType("subpage", {
     var mode = subpageStateDisplayMode(b);
 
     if (mode === "numeric") {
-      var unit = b.unit ? helpers.escHtml(b.unit) : "";
+      var unit = b.unit ? helpers.escHtml(helpers.displayUnitText(b.unit)) : "";
       var prec = parseInt(b.precision || "0", 10) || 0;
       var sampleVal = (0).toFixed(prec);
       return {

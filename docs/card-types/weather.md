@@ -6,7 +6,7 @@ description:
 
 # Weather
 
-A weather card displays weather information from a Home Assistant weather entity. It can show either the current condition, such as **Sunny**, **Cloudy**, or **Rainy**, or the high / low temperatures for today or tomorrow, such as **18/10°C**.
+A weather card displays weather information from a Home Assistant weather entity. It can show either the current condition, such as **Sunny**, **Cloudy**, or **Rainy**, or the high / low temperatures for today or tomorrow, such as **18/10°**.
 
 Weather cards are read-only — tapping them does nothing.
 
@@ -28,7 +28,7 @@ Older cards that were created as **Weather Forecast** cards still work. They now
 - In **Current Conditions** mode, the card watches the weather entity's current state.
 - In **Current Conditions** mode, the icon changes automatically and the label uses the condition name from Home Assistant.
 - In **Temperatures Today** and **Temperatures Tomorrow** modes, the card asks Home Assistant for the daily forecast for the configured weather entity.
-- In temperature modes, the unit label comes from the panel's **Temperature Unit** setting.
+- In temperature modes, the scale comes from the panel's **Temperature Unit** setting, and the visible unit label is the compact `°` suffix.
 - In temperature modes, the card label defaults to **Today** or **Tomorrow**, unless you set your own label.
 - If Home Assistant reports `unknown`, `unavailable`, or an unexpected current condition, the card shows a fallback weather icon and a readable label.
 - If the requested forecast is missing or unavailable, the card shows **--/--** instead of leaving the card blank.

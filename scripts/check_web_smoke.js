@@ -118,6 +118,8 @@ assert(
 
 assert.strictEqual(hooks.normalizeTemperatureUnit("fahrenheit"), "\u00b0F");
 assert.strictEqual(hooks.normalizeTemperatureUnit("centigrade"), "\u00b0C");
+assert.strictEqual(hooks.displayUnitText("deg C"), "\u00b0");
+assert.strictEqual(hooks.displayUnitText("\u00b0F"), "\u00b0");
 assert.strictEqual(hooks.normalizeScreensaverAction("Screen Dimmed"), "dim");
 assert.strictEqual(hooks.previewHtmlValue({ labelHtml: "" }, "labelHtml", "fallback"), "");
 assert.strictEqual(hooks.previewHtmlValue({}, "labelHtml", "fallback"), "fallback");
