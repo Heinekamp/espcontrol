@@ -431,7 +431,7 @@
           "volumeNumber": "volume_modal_number_font",
           "volumeLabel": "label_font_sm",
           "climateOptionTitle": "climate_option_title_font",
-          "climateOptionValue": "label_font_sm"
+          "climateOptionValue": "climate_option_value_font_sm"
         },
         "display": {
           "wrapTallLabels": false
