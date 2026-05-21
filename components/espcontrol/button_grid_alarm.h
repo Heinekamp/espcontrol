@@ -13,12 +13,15 @@ struct AlarmCardCtx {
   std::string state;
   std::string arm_mode;
   std::string pending_action_mode;
+  lv_timer_t *arm_delay_timer = nullptr;
   lv_obj_t *btn = nullptr;
   lv_obj_t *icon_lbl = nullptr;
   lv_obj_t *grid_page = nullptr;
   lv_obj_t *page = nullptr;
   TransientStatusLabel *status_label = nullptr;
   lv_timer_t *pending_action_timer = nullptr;
+  uint32_t arm_delay_started_ms = 0;
+  int arm_delay_seconds = -1;
   const lv_font_t *label_font = nullptr;
   const lv_font_t *pin_label_font = nullptr;
   const lv_font_t *key_label_font = nullptr;
@@ -59,6 +62,7 @@ struct AlarmControlModalUi {
   lv_obj_t *mode_label[3] = {};
   lv_obj_t *arming_view = nullptr;
   lv_obj_t *arming_title = nullptr;
+  lv_obj_t *arming_countdown = nullptr;
   lv_obj_t *arming_icon = nullptr;
   lv_obj_t *arming_disarm_btn = nullptr;
   lv_obj_t *arming_disarm_label = nullptr;
@@ -271,6 +275,93 @@ inline std::string alarm_control_button_label_for_state(const std::string &mode,
 
 inline void alarm_control_update_modal(AlarmCardCtx *ctx);
 
+inline int alarm_parse_delay_seconds(const std::string &value) {
+  if (value.empty()) return -1;
+  std::string lower = value;
+  for (char &ch : lower) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+  if (lower == "unknown" || lower == "unavailable" || lower == "none" ||
+      lower == "null") return -1;
+
+  if (value.find(':') != std::string::npos) {
+    int total = 0;
+    int part = 0;
+    bool saw_digit = false;
+    bool saw_part = false;
+    for (char ch : value) {
+      if (ch >= '0' && ch <= '9') {
+        saw_digit = true;
+        saw_part = true;
+        part = part * 10 + (ch - '0');
+      } else if (ch == ':') {
+        if (!saw_part) return -1;
+        total = total * 60 + part;
+        part = 0;
+        saw_part = false;
+      } else if (saw_part) {
+        break;
+      }
+    }
+    if (!saw_digit || !saw_part) return -1;
+    return total * 60 + part;
+  }
+
+  int seconds = 0;
+  bool saw_digit = false;
+  for (char ch : value) {
+    if (ch >= '0' && ch <= '9') {
+      saw_digit = true;
+      if (seconds < 86400) seconds = seconds * 10 + (ch - '0');
+    } else if (saw_digit) {
+      break;
+    }
+  }
+  return saw_digit ? seconds : -1;
+}
+
+inline int alarm_remaining_delay_seconds(AlarmCardCtx *ctx) {
+  if (!ctx || ctx->arm_delay_seconds < 0) return -1;
+  if (ctx->arm_delay_seconds == 0) return 0;
+  uint32_t elapsed_ms = lv_tick_get() - ctx->arm_delay_started_ms;
+  int elapsed_seconds = static_cast<int>(elapsed_ms / 1000);
+  int remaining = ctx->arm_delay_seconds - elapsed_seconds;
+  return remaining > 0 ? remaining : 0;
+}
+
+inline std::string alarm_delay_label(int seconds) {
+  if (seconds < 0) return "";
+  char buf[16];
+  if (seconds >= 60) {
+    snprintf(buf, sizeof(buf), "%d:%02d", seconds / 60, seconds % 60);
+  } else {
+    snprintf(buf, sizeof(buf), "%ds", seconds);
+  }
+  return std::string(buf);
+}
+
+inline void alarm_arm_delay_timer_cb(lv_timer_t *timer) {
+  AlarmCardCtx *ctx = static_cast<AlarmCardCtx *>(lv_timer_get_user_data(timer));
+  if (!ctx) return;
+  alarm_control_update_modal(ctx);
+  if (ctx->state != "arming" || alarm_remaining_delay_seconds(ctx) <= 0) {
+    lv_timer_pause(timer);
+  }
+}
+
+inline void alarm_arm_delay_refresh_timer(AlarmCardCtx *ctx) {
+  if (!ctx) return;
+  bool should_run = ctx->state == "arming" && alarm_remaining_delay_seconds(ctx) > 0;
+  if (!should_run) {
+    if (ctx->arm_delay_timer) lv_timer_pause(ctx->arm_delay_timer);
+    return;
+  }
+  if (!ctx->arm_delay_timer) {
+    ctx->arm_delay_timer = lv_timer_create(alarm_arm_delay_timer_cb, 1000, ctx);
+  } else {
+    lv_timer_resume(ctx->arm_delay_timer);
+    lv_timer_reset(ctx->arm_delay_timer);
+  }
+}
+
 inline bool alarm_control_modal_shows_arming(AlarmCardCtx *ctx) {
   return ctx && ctx->state == "arming";
 }
@@ -309,7 +400,9 @@ inline void alarm_set_card_state_colors(AlarmCardCtx *ctx, uint32_t checked_colo
 
 inline void alarm_apply_home_state(AlarmCardCtx *ctx, const std::string &state) {
   if (!ctx || !ctx->btn) return;
+  bool was_arming = ctx->state == "arming";
   ctx->state = state;
+  if (ctx->state == "arming" && !was_arming) ctx->arm_delay_started_ms = lv_tick_get();
   bool unavailable = state.empty() || state == "unavailable" || state == "unknown";
   ctx->available = !unavailable;
   apply_control_availability(ctx->btn, ctx->btn, ctx->available);
@@ -329,6 +422,7 @@ inline void alarm_apply_home_state(AlarmCardCtx *ctx, const std::string &state) 
       : (alarm_state_releases_label(state) && !unavailable && !triggered));
   alarm_clear_pending_action_if_progressed(ctx);
   alarm_control_update_modal(ctx);
+  alarm_arm_delay_refresh_timer(ctx);
 }
 
 inline void alarm_apply_home_arm_mode(AlarmCardCtx *ctx, const std::string &arm_mode) {
@@ -337,6 +431,14 @@ inline void alarm_apply_home_arm_mode(AlarmCardCtx *ctx, const std::string &arm_
   alarm_apply_card_status_icon(ctx);
   alarm_clear_pending_action_if_progressed(ctx);
   alarm_control_update_modal(ctx);
+}
+
+inline void alarm_apply_home_arm_delay(AlarmCardCtx *ctx, const std::string &delay) {
+  if (!ctx) return;
+  ctx->arm_delay_seconds = alarm_parse_delay_seconds(delay);
+  ctx->arm_delay_started_ms = lv_tick_get();
+  alarm_control_update_modal(ctx);
+  alarm_arm_delay_refresh_timer(ctx);
 }
 
 inline void subscribe_alarm_state(AlarmCardCtx *ctx) {
@@ -351,6 +453,12 @@ inline void subscribe_alarm_state(AlarmCardCtx *ctx) {
     ctx->entity_id, std::string("arm_mode"),
     std::function<void(esphome::StringRef)>([ctx](esphome::StringRef arm_mode) {
       alarm_apply_home_arm_mode(ctx, string_ref_limited(arm_mode, HA_SHORT_STATE_MAX_LEN));
+    })
+  );
+  esphome::api::global_api_server->subscribe_home_assistant_state(
+    ctx->entity_id, std::string("delay"),
+    std::function<void(esphome::StringRef)>([ctx](esphome::StringRef delay) {
+      alarm_apply_home_arm_delay(ctx, string_ref_limited(delay, HA_SHORT_STATE_MAX_LEN));
     })
   );
 }
@@ -595,6 +703,14 @@ inline void alarm_control_update_modal(AlarmCardCtx *ctx) {
   alarm_control_set_hidden(ui.arming_view, !show_arming);
   if (ui.arming_view) {
     if (ui.arming_title) lv_label_set_text(ui.arming_title, alarm_state_label(ctx->state).c_str());
+    if (ui.arming_countdown) {
+      int remaining = show_arming ? alarm_remaining_delay_seconds(ctx) : -1;
+      alarm_control_set_hidden(ui.arming_countdown, remaining < 0);
+      if (remaining >= 0) {
+        std::string countdown = alarm_delay_label(remaining);
+        lv_label_set_text(ui.arming_countdown, countdown.c_str());
+      }
+    }
     ui.arming_disarm_action.card = ctx;
     ui.arming_disarm_action.mode = "disarm";
     ui.arming_disarm_action.requires_pin = alarm_action_requires_pin(ctx->options, "disarm");
@@ -934,6 +1050,17 @@ inline void alarm_control_create_arming_view(AlarmControlModalUi &ui,
   apply_width_compensation(ui.arming_title, ctx ? ctx->width_compensation_percent : 100);
   lv_obj_set_width(ui.arming_title, layout.panel_w - layout.inset * 2);
   lv_obj_align(ui.arming_title, LV_ALIGN_TOP_MID, 0, layout.panel_h / 12);
+
+  ui.arming_countdown = lv_label_create(ui.arming_view);
+  lv_label_set_text(ui.arming_countdown, "");
+  lv_obj_set_style_text_color(ui.arming_countdown, lv_color_hex(DARK_TEXT_SOFT), LV_PART_MAIN);
+  lv_obj_set_style_text_align(ui.arming_countdown, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+  if (label_font) lv_obj_set_style_text_font(ui.arming_countdown, label_font, LV_PART_MAIN);
+  apply_width_compensation(ui.arming_countdown, ctx ? ctx->width_compensation_percent : 100);
+  lv_obj_set_width(ui.arming_countdown, layout.panel_w - layout.inset * 2);
+  lv_obj_align(ui.arming_countdown, LV_ALIGN_TOP_MID, 0,
+    layout.panel_h / 12 + control_modal_scaled_px(58, layout.short_side));
+  lv_obj_add_flag(ui.arming_countdown, LV_OBJ_FLAG_HIDDEN);
 
   lv_coord_t icon_size = layout.short_side * 64 / 100;
   if (icon_size < control_modal_scaled_px(120, layout.short_side))
