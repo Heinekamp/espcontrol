@@ -14,11 +14,14 @@ constexpr int CLIMATE_DEFAULT_MAX_TENTHS = 350;
 constexpr int CLIMATE_DEFAULT_STEP_TENTHS = 5;
 constexpr uint32_t CLIMATE_TEMP_DEBOUNCE_MS = 450;
 constexpr int CLIMATE_MODAL_ARC_SIZE_PERCENT = 88;
+constexpr int CLIMATE_MODAL_JC4880P443_ARC_SIZE_PERCENT = 96;
 constexpr lv_coord_t CLIMATE_MODAL_ARC_UP_REF_PX = 30;
 constexpr lv_coord_t CLIMATE_MODAL_SQUARE_ARC_UP_REF_PX = 24;
 constexpr lv_coord_t CLIMATE_MODAL_STEP_BUTTONS_UP_REF_PX = 42;
+constexpr lv_coord_t CLIMATE_MODAL_JC4880P443_STEP_BUTTONS_UP_REF_PX = 14;
 constexpr lv_coord_t CLIMATE_MODAL_SQUARE_STEP_BUTTONS_UP_REF_PX = 18;
 constexpr lv_coord_t CLIMATE_MODAL_4848_STEP_BUTTONS_UP_REF_PX = 18;
+constexpr lv_coord_t CLIMATE_MODAL_JC4880P443_LABELS_DOWN_REF_PX = 22;
 constexpr lv_coord_t CLIMATE_MODAL_SQUARE_LABELS_DOWN_REF_PX = 18;
 constexpr lv_coord_t CLIMATE_MODAL_4848_LABELS_DOWN_REF_PX = 12;
 constexpr lv_coord_t CLIMATE_MODAL_4848_OPTION_CHIP_H_REF_PX = 58;
@@ -438,6 +441,8 @@ inline bool climate_control_uses_4848_modal_tuning(const ControlModalLayout &lay
 }
 
 inline lv_coord_t climate_control_step_buttons_up_ref(const ControlModalLayout &layout) {
+  if (control_modal_is_jc4880p443_size(layout))
+    return CLIMATE_MODAL_JC4880P443_STEP_BUTTONS_UP_REF_PX;
   if (climate_control_uses_4848_modal_tuning(layout))
     return CLIMATE_MODAL_4848_STEP_BUTTONS_UP_REF_PX;
   if (climate_control_uses_square_modal_tuning(layout))
@@ -446,6 +451,8 @@ inline lv_coord_t climate_control_step_buttons_up_ref(const ControlModalLayout &
 }
 
 inline lv_coord_t climate_control_labels_down_ref(const ControlModalLayout &layout) {
+  if (control_modal_is_jc4880p443_size(layout))
+    return CLIMATE_MODAL_JC4880P443_LABELS_DOWN_REF_PX;
   if (climate_control_uses_4848_modal_tuning(layout))
     return CLIMATE_MODAL_4848_LABELS_DOWN_REF_PX;
   if (climate_control_uses_square_modal_tuning(layout))
@@ -462,9 +469,21 @@ inline void climate_apply_4848_bottom_chip_padding(lv_obj_t *chip, bool option_c
   if (option_chip) lv_obj_set_style_pad_column(chip, 12, LV_PART_MAIN);
 }
 
+inline void climate_apply_jc4880p443_bottom_chip_padding(lv_obj_t *chip, bool option_chip) {
+  if (!chip) return;
+  lv_obj_set_style_pad_left(chip, option_chip ? 32 : 18, LV_PART_MAIN);
+  lv_obj_set_style_pad_right(chip, option_chip ? 22 : 12, LV_PART_MAIN);
+  lv_obj_set_style_pad_top(chip, option_chip ? 12 : 6, LV_PART_MAIN);
+  lv_obj_set_style_pad_bottom(chip, option_chip ? 18 : 12, LV_PART_MAIN);
+  if (option_chip) lv_obj_set_style_pad_column(chip, 24, LV_PART_MAIN);
+}
+
 inline ControlModalLayout climate_control_calc_layout(ClimateControlCtx *ctx) {
   ControlModalLayout layout = control_modal_calc_layout(ctx ? ctx->width_compensation_percent : 100);
-  layout.arc_size = layout.arc_size * CLIMATE_MODAL_ARC_SIZE_PERCENT / 100;
+  int arc_size_percent = control_modal_is_jc4880p443_size(layout)
+    ? CLIMATE_MODAL_JC4880P443_ARC_SIZE_PERCENT
+    : CLIMATE_MODAL_ARC_SIZE_PERCENT;
+  layout.arc_size = layout.arc_size * arc_size_percent / 100;
   if (layout.arc_size < 74) layout.arc_size = 74;
 
   int width_percent = normalize_width_compensation_percent(ctx ? ctx->width_compensation_percent : 100);
@@ -1263,6 +1282,7 @@ inline void climate_control_layout_modal(ClimateControlCtx *ctx) {
   lv_coord_t title_center_y = value_center_y -
     (value_h / 2 + layout.title_gap + title_h / 2);
   bool tune_4848 = climate_control_uses_4848_modal_tuning(layout);
+  bool tune_jc4880p443 = control_modal_is_jc4880p443_size(layout);
   bool roomy_landscape = layout.panel_w >= 900 && layout.panel_h <= 520;
   bool medium_landscape = layout.panel_w >= 760 && layout.panel_h <= 520;
   lv_coord_t chip_h = tune_4848
@@ -1316,12 +1336,18 @@ inline void climate_control_layout_modal(ClimateControlCtx *ctx) {
   if (ui.mode_chip) {
     lv_obj_set_size(ui.mode_chip, option_chip_w, chip_h);
     lv_obj_set_style_radius(ui.mode_chip, chip_h / 2, LV_PART_MAIN);
+    if (tune_jc4880p443) climate_apply_jc4880p443_bottom_chip_padding(ui.mode_chip, true);
     if (tune_4848) climate_apply_4848_bottom_chip_padding(ui.mode_chip, true);
   }
   if (ui.preset_chip) {
     lv_obj_set_size(ui.preset_chip, option_chip_w, chip_h);
     lv_obj_set_style_radius(ui.preset_chip, chip_h / 2, LV_PART_MAIN);
+    if (tune_jc4880p443) climate_apply_jc4880p443_bottom_chip_padding(ui.preset_chip, true);
     if (tune_4848) climate_apply_4848_bottom_chip_padding(ui.preset_chip, true);
+  }
+  if (tune_jc4880p443) {
+    climate_apply_jc4880p443_bottom_chip_padding(ui.fan_chip, false);
+    climate_apply_jc4880p443_bottom_chip_padding(ui.swing_chip, false);
   }
   if (tune_4848) {
     climate_apply_4848_bottom_chip_padding(ui.fan_chip, false);
