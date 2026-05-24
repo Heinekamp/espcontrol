@@ -15,19 +15,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  prepare-matrix:
+    name: Prepare Firmware Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            devices/manifest.json
+            scripts/firmware_matrix.py
+          sparse-checkout-cone-mode: false
+
+      - name: Generate firmware matrix
+        id: matrix
+        run: |
+          MATRIX=$(python3 scripts/firmware_matrix.py nightly)
+          echo "matrix=${MATRIX}" >> "$GITHUB_OUTPUT"
+
   compile:
     name: Compile Firmware (${{ matrix.slug }})
+    needs: prepare-matrix
     runs-on: self-hosted
     strategy:
       fail-fast: false
       max-parallel: 1
-      matrix:
-        slug:
-          - guition-esp32-p4-jc1060p470
-          - guition-esp32-p4-jc4880p443
-          - guition-esp32-p4-jc8012p4a1
-          - esp32-p4-86
-          - guition-esp32-s3-4848s040
+      matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
     steps:
       - name: Prepare self-hosted workspace
         run: |

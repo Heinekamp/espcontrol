@@ -14,29 +14,33 @@ env:
   ESPCONTROL_BUILD_CACHE_MAX_MB: 1024
 
 jobs:
+  prepare-matrix:
+    name: Prepare Firmware Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            devices/manifest.json
+            scripts/firmware_matrix.py
+          sparse-checkout-cone-mode: false
+
+      - name: Generate firmware matrix
+        id: matrix
+        run: |
+          MATRIX=$(python3 scripts/firmware_matrix.py release)
+          echo "matrix=${MATRIX}" >> "$GITHUB_OUTPUT"
+
   build-firmware:
     name: Build ${{ matrix.slug }}
+    needs: prepare-matrix
     runs-on: self-hosted
     strategy:
       fail-fast: false
       max-parallel: 1
-      matrix:
-        include:
-          - device: guition-esp32-p4-jc1060p470
-            slug: guition-esp32-p4-jc1060p470
-            chip: ESP32-P4
-          - device: guition-esp32-p4-jc8012p4a1
-            slug: guition-esp32-p4-jc8012p4a1
-            chip: ESP32-P4
-          - device: guition-esp32-p4-jc4880p443
-            slug: guition-esp32-p4-jc4880p443
-            chip: ESP32-P4
-          - device: esp32-p4-86
-            slug: esp32-p4-86
-            chip: ESP32-P4
-          - device: guition-esp32-s3-4848s040
-            slug: guition-esp32-s3-4848s040
-            chip: ESP32-S3
+      matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
     steps:
       - name: Prepare self-hosted workspace
         run: |

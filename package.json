@@ -2,9 +2,10 @@
   "name": "espcontrol",
   "private": true,
   "scripts": {
-    "check:all": "python3 scripts/check_device_manifest.py && npm run check:config && npm run check:backup-contract && npm run check:web-smoke && npm run check:web-browser-smoke && npm run check:firmware-release && npm run check:release-changelog && npm run check:generated && python3 scripts/generate_device_slots.py --check && python3 scripts/check_icon_groups.py && npm run check:timezones && npm run docs:build",
+    "check:all": "python3 scripts/check_device_manifest.py && npm run check:config && npm run check:backup-contract && npm run check:web-smoke && npm run check:web-browser-smoke && npm run check:firmware-release && npm run check:firmware-matrix && npm run check:release-changelog && npm run check:generated && python3 scripts/generate_device_slots.py --check && python3 scripts/check_icon_groups.py && npm run check:timezones && npm run docs:build",
     "check:backup-contract": "node scripts/check_backup_contract.js",
     "check:config": "node scripts/check_config_formats.js",
+    "check:firmware-matrix": "python3 scripts/check_firmware_matrix.py",
     "check:firmware-release": "python3 scripts/check_firmware_release.py",
     "check:generated": "python3 scripts/build.py --check",
     "check:release-changelog": "python3 scripts/check_release_changelog.py",

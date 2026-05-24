@@ -74,6 +74,9 @@
         }
       },
       "firmware": {
+        "build": {
+          "chipFamily": "ESP32-P4"
+        },
         "fonts": {
           "icon": "font_mdi_55_icons",
           "sensor": "font_roboto_light_55_digits",
@@ -196,6 +199,9 @@
         }
       },
       "firmware": {
+        "build": {
+          "chipFamily": "ESP32-P4"
+        },
         "fonts": {
           "icon": "font_mdi_62_icons",
           "sensor": "font_roboto_light_62_digits",
@@ -310,6 +316,9 @@
         }
       },
       "firmware": {
+        "build": {
+          "chipFamily": "ESP32-P4"
+        },
         "fonts": {
           "icon": "font_mdi_56_icons",
           "sensor": "font_roboto_light_52_digits",
@@ -424,6 +433,9 @@
         }
       },
       "firmware": {
+        "build": {
+          "chipFamily": "ESP32-P4"
+        },
         "fonts": {
           "icon": "font_mdi_66_icons",
           "sensor": "font_roboto_light_66_digits",
@@ -553,6 +565,9 @@
         }
       },
       "firmware": {
+        "build": {
+          "chipFamily": "ESP32-S3"
+        },
         "fonts": {
           "icon": "font_mdi_44_icons",
           "sensor": "font_roboto_light_44_digits",
