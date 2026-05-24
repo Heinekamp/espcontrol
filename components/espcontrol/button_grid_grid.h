@@ -216,6 +216,83 @@ inline void setup_card_visual(BtnSlot &s, const ParsedCfg &p,
   setup_toggle_visual(s, p);
 }
 
+inline bool bind_basic_sensor_card(BtnSlot &s, const ParsedCfg &p,
+                                   const CardPalette &palette) {
+  if (is_text_sensor_card(p)) {
+    if (!p.sensor.empty())
+      subscribe_text_sensor_value(s.text_lbl, p.sensor, s.btn,
+        sensor_active_color_enabled(p), palette.on_val, palette.sensor_val);
+    return true;
+  }
+  if (p.type == "sensor") {
+    if (!p.sensor.empty()) {
+      subscribe_sensor_value(s.sensor_lbl, p.sensor, parse_precision(p.precision),
+        s.unit_lbl, p.unit, s.btn,
+        sensor_active_color_enabled(p), palette.on_val, palette.sensor_val);
+      if (p.label.empty())
+        subscribe_friendly_name(s.text_lbl, p.sensor);
+    }
+    return true;
+  }
+  if (p.type == "door_window") {
+    if (!p.sensor.empty()) {
+      subscribe_door_window_state(s.btn, s.icon_lbl, p.sensor,
+        door_window_closed_icon(p), door_window_open_icon(p),
+        door_window_active_color_enabled(p), palette.on_val, palette.sensor_val);
+      if (p.label.empty())
+        subscribe_friendly_name(s.text_lbl, p.sensor);
+    }
+    return true;
+  }
+  return false;
+}
+
+inline bool bind_passive_card_sources(BtnSlot &s, const ParsedCfg &p) {
+  if (p.type == "calendar") {
+    subscribe_calendar_date_source(p.entity);
+    return true;
+  }
+  if (p.type == "timezone" || weather_card_shows_forecast(p)) {
+    return true;
+  }
+  if (p.type == "weather") {
+    if (!p.entity.empty())
+      subscribe_weather_state(s.icon_lbl, s.text_lbl, p.entity);
+    return true;
+  }
+  return false;
+}
+
+inline bool bind_garage_status_card(BtnSlot &s, const ParsedCfg &p) {
+  if (p.type != "garage" || p.entity.empty() || garage_command_mode(p.sensor)) {
+    return false;
+  }
+  bool show_status = garage_card_show_status(p);
+  TransientStatusLabel *status_label = create_transient_status_label(
+    s.text_lbl, show_status ? "--" : (p.label.empty() ? "Garage Door" : p.label));
+  subscribe_garage_state(s.btn, s.icon_lbl, status_label,
+    garage_closed_icon(p.icon), garage_open_icon(p.icon_on), p.entity, show_status);
+  if (!show_status && p.label.empty())
+    subscribe_friendly_name(status_label, p.entity);
+  return true;
+}
+
+inline LockCardCtx *bind_lock_status_card(BtnSlot &s, const ParsedCfg &p) {
+  if (p.type != "lock" || p.entity.empty() || lock_command_mode(p.sensor)) {
+    return nullptr;
+  }
+  LockCardCtx *ctx = new LockCardCtx();
+  ctx->entity_id = p.entity;
+  lv_obj_set_user_data(s.btn, ctx);
+  TransientStatusLabel *status_label = create_transient_status_label(
+    s.text_lbl, p.label.empty() ? "Lock" : p.label);
+  subscribe_lock_state(s.btn, s.icon_lbl, status_label,
+    lock_locked_icon(p.icon), lock_unlocked_icon(p.icon_on), ctx);
+  if (p.label.empty())
+    subscribe_friendly_name(status_label, p.entity);
+  return ctx;
+}
+
 inline void refresh_media_card_layout(BtnSlot &s, const ParsedCfg &p,
                                       const GridConfig &cfg,
                                       int row_span = 1) {
@@ -525,59 +602,16 @@ inline void grid_phase2(
     std::string scfg = s.config->state;
 
     ParsedCfg p = parse_cfg(scfg);
-    if (is_text_sensor_card(p)) {
-      if (!p.sensor.empty())
-        subscribe_text_sensor_value(s.text_lbl, p.sensor, s.btn,
-          sensor_active_color_enabled(p), palette.on_val, palette.sensor_val);
-      continue;
-    }
-    if (p.type == "sensor") {
-      if (p.sensor.empty()) continue;
-      subscribe_sensor_value(s.sensor_lbl, p.sensor, parse_precision(p.precision),
-        s.unit_lbl, p.unit, s.btn,
-        sensor_active_color_enabled(p), palette.on_val, palette.sensor_val);
-      if (p.label.empty())
-        subscribe_friendly_name(s.text_lbl, p.sensor);
-      continue;
-    }
-    if (p.type == "door_window") {
-      if (p.sensor.empty()) continue;
-      subscribe_door_window_state(s.btn, s.icon_lbl, p.sensor,
-        door_window_closed_icon(p), door_window_open_icon(p),
-        door_window_active_color_enabled(p), palette.on_val, palette.sensor_val);
-      if (p.label.empty())
-        subscribe_friendly_name(s.text_lbl, p.sensor);
-      continue;
-    }
-    if (p.type == "calendar") {
-      subscribe_calendar_date_source(p.entity);
-      continue;
-    }
-    if (p.type == "timezone") {
-      continue;
-    }
-    if (weather_card_shows_forecast(p)) {
-      continue;
-    }
-    if (p.type == "weather") {
-      if (!p.entity.empty())
-        subscribe_weather_state(s.icon_lbl, s.text_lbl, p.entity);
-      continue;
-    }
+    if (bind_basic_sensor_card(s, p, palette)) continue;
+    if (bind_passive_card_sources(s, p)) continue;
     if (p.type == "garage") {
       if (!p.entity.empty()) {
         if (garage_command_mode(p.sensor)) {
           subscribe_control_availability(s.btn, s.btn, p.entity);
-        } else {
-          bool show_status = garage_card_show_status(p);
-          TransientStatusLabel *status_label = create_transient_status_label(
-            s.text_lbl, show_status ? "--" : (p.label.empty() ? "Garage Door" : p.label));
-          subscribe_garage_state(s.btn, s.icon_lbl, status_label,
-            garage_closed_icon(p.icon), garage_open_icon(p.icon_on), p.entity, show_status);
-          if (!show_status && p.label.empty())
-            subscribe_friendly_name(status_label, p.entity);
         }
       }
+      if (!garage_command_mode(p.sensor))
+        bind_garage_status_card(s, p);
       continue;
     }
     if (subpage_parent_sensor_state_enabled(p)) {
@@ -618,15 +652,7 @@ inline void grid_phase2(
         if (lock_command_mode(p.sensor)) {
           subscribe_control_availability(s.btn, s.btn, p.entity);
         } else {
-          LockCardCtx *ctx = new LockCardCtx();
-          ctx->entity_id = p.entity;
-          lv_obj_set_user_data(s.btn, ctx);
-          TransientStatusLabel *status_label = create_transient_status_label(
-            s.text_lbl, p.label.empty() ? "Lock" : p.label);
-          subscribe_lock_state(s.btn, s.icon_lbl, status_label,
-            lock_locked_icon(p.icon), lock_unlocked_icon(p.icon_on), ctx);
-          if (p.label.empty())
-            subscribe_friendly_name(status_label, p.entity);
+          bind_lock_status_card(s, p);
         }
       }
       continue;
@@ -1059,42 +1085,8 @@ inline void grid_phase2(
       apply_slot_text_width_compensation(sub_slot, cfg.width_compensation_percent);
       setup_card_visual(sub_slot, sb_cfg, cfg, palette, rs, cs);
 
-      if (is_text_sensor_card(sb_cfg)) {
-        if (!sb_cfg.sensor.empty())
-          subscribe_text_sensor_value(sub_slot.text_lbl, sb_cfg.sensor, sub_slot.btn,
-            sensor_active_color_enabled(sb_cfg), palette.on_val, palette.sensor_val);
-        continue;
-      }
-      if (sb_cfg.type == "sensor") {
-        if (sb_cfg.sensor.empty()) continue;
-        subscribe_sensor_value(sub_slot.sensor_lbl, sb_cfg.sensor, parse_precision(sb_cfg.precision),
-          sub_slot.unit_lbl, sb_cfg.unit, sub_slot.btn,
-          sensor_active_color_enabled(sb_cfg), palette.on_val, palette.sensor_val);
-        if (sb_cfg.label.empty())
-          subscribe_friendly_name(sub_slot.text_lbl, sb_cfg.sensor);
-        continue;
-      }
-      if (sb_cfg.type == "door_window") {
-        if (sb_cfg.sensor.empty()) continue;
-        subscribe_door_window_state(sub_slot.btn, sub_slot.icon_lbl, sb_cfg.sensor,
-          door_window_closed_icon(sb_cfg), door_window_open_icon(sb_cfg),
-          door_window_active_color_enabled(sb_cfg), palette.on_val, palette.sensor_val);
-        if (sb_cfg.label.empty())
-          subscribe_friendly_name(sub_slot.text_lbl, sb_cfg.sensor);
-        continue;
-      }
-      if (sb_cfg.type == "calendar") {
-        subscribe_calendar_date_source(sb_cfg.entity);
-        continue;
-      }
-      if (sb_cfg.type == "timezone" || weather_card_shows_forecast(sb_cfg)) {
-        continue;
-      }
-      if (sb_cfg.type == "weather") {
-        if (!sb_cfg.entity.empty())
-          subscribe_weather_state(sub_slot.icon_lbl, sub_slot.text_lbl, sb_cfg.entity);
-        continue;
-      }
+      if (bind_basic_sensor_card(sub_slot, sb_cfg, palette)) continue;
+      if (bind_passive_card_sources(sub_slot, sb_cfg)) continue;
       if (sb_cfg.type == "cover" && cover_command_mode(sb_cfg.sensor)) {
         if (!sb_cfg.entity.empty()) {
           if (sb_cfg.label.empty())
@@ -1133,15 +1125,10 @@ inline void grid_phase2(
               if (c) send_cover_command_action(*c);
             }, LV_EVENT_CLICKED, ctx);
           } else {
-            bool show_status = garage_card_show_status(sb_cfg);
-            TransientStatusLabel *status_label = create_transient_status_label(
-              sub_slot.text_lbl, show_status ? "--" : (sb_cfg.label.empty() ? "Garage Door" : sb_cfg.label));
-            subscribe_garage_state(sub_slot.btn, sub_slot.icon_lbl, status_label,
-              garage_closed_icon(sb_cfg.icon), garage_open_icon(sb_cfg.icon_on), sb_cfg.entity, show_status);
-            if (!show_status && sb_cfg.label.empty())
-              subscribe_friendly_name(status_label, sb_cfg.entity);
-            add_parent_indicator(sb_cfg.entity);
-            add_subpage_toggle_click(sb_btn, sb_cfg.entity, true);
+            if (bind_garage_status_card(sub_slot, sb_cfg)) {
+              add_parent_indicator(sb_cfg.entity);
+              add_subpage_toggle_click(sb_btn, sb_cfg.entity, true);
+            }
           }
         }
         continue;
@@ -1156,20 +1143,14 @@ inline void grid_phase2(
               if (c) send_lock_command_action(*c);
             }, LV_EVENT_CLICKED, ctx);
           } else {
-            LockCardCtx *lock_ctx = new LockCardCtx();
-            lock_ctx->entity_id = sb_cfg.entity;
-            lv_obj_set_user_data(sb_btn, lock_ctx);
-            TransientStatusLabel *status_label = create_transient_status_label(
-              sub_slot.text_lbl, sb_cfg.label.empty() ? "Lock" : sb_cfg.label);
-            subscribe_lock_state(sub_slot.btn, sub_slot.icon_lbl, status_label,
-              lock_locked_icon(sb_cfg.icon), lock_unlocked_icon(sb_cfg.icon_on), lock_ctx);
-            if (sb_cfg.label.empty())
-              subscribe_friendly_name(status_label, sb_cfg.entity);
-            add_parent_indicator(sb_cfg.entity);
-            lv_obj_add_event_cb(sb_btn, [](lv_event_t *e) {
-              LockCardCtx *ctx = (LockCardCtx *)lv_event_get_user_data(e);
-              if (ctx) send_lock_action(ctx);
-            }, LV_EVENT_CLICKED, lock_ctx);
+            LockCardCtx *lock_ctx = bind_lock_status_card(sub_slot, sb_cfg);
+            if (lock_ctx) {
+              add_parent_indicator(sb_cfg.entity);
+              lv_obj_add_event_cb(sb_btn, [](lv_event_t *e) {
+                LockCardCtx *ctx = (LockCardCtx *)lv_event_get_user_data(e);
+                if (ctx) send_lock_action(ctx);
+              }, LV_EVENT_CLICKED, lock_ctx);
+            }
           }
         }
         continue;
