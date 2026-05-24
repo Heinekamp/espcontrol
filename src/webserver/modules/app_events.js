@@ -1,5 +1,21 @@
 // ── SSE ────────────────────────────────────────────────────────────────
 
+var SSE_ALIAS_GROUPS = {
+  clockBar: ["switch-screen__clock_bar", "switch-screen_clock_bar", "switch-clock_bar_enabled"],
+  networkStatus: ["switch-screen__network_status_icon", "switch-screen_network_status_icon", "switch-network_status_enabled"],
+  temperatureDegreeSymbol: ["switch-screen__temperature_degree_symbol", "switch-screen_temperature_degree_symbol", "switch-temperature_degree_symbol_enabled"],
+  screensaverTimeout: ["number-screensaver_timeout", "number-screen_saver__timeout", "number-screen_saver_timeout"],
+  scheduleWakeTimeout: ["number-screen__schedule_wake_timeout", "number-screen_schedule_wake_timeout", "number-schedule_wake_timeout"],
+  scheduleWakeBrightness: ["number-screen__schedule_wake_brightness", "number-screen_schedule_wake_brightness", "number-schedule_wake_brightness"],
+  scheduleDimmedBrightness: ["number-screen__schedule_dimmed_brightness", "number-screen_schedule_dimmed_brightness", "number-schedule_dimmed_brightness"],
+  scheduleClockBrightness: ["number-screen__schedule_clock_brightness", "number-screen_schedule_clock_brightness", "number-schedule_clock_brightness"],
+  ntpServer1: ["text-screen__ntp_server_1", "text-ntp_server_1"],
+  ntpServer2: ["text-screen__ntp_server_2", "text-ntp_server_2"],
+  ntpServer3: ["text-screen__ntp_server_3", "text-ntp_server_3"],
+  monthNames: ["text-screen__month_names", "text-month_names"],
+  developerExperimentalFeatures: ["switch-developer__experimental_features", "switch-developer_experimental_features"],
+};
+
 function connectEvents() {
   if (_eventSource) { _eventSource.close(); _eventSource = null; }
 
@@ -32,6 +48,10 @@ function connectEvents() {
       _eventSource = null;
       setTimeout(connectEvents, 5000);
     }
+  }
+
+  function addSseAliases(handlers, names, fn) {
+    for (var i = 0; i < names.length; i++) handlers[names[i]] = fn;
   }
 
   var sseHandlers = {
@@ -73,35 +93,11 @@ function connectEvents() {
       state.clockBarOn = d.value === true || val === "ON";
       syncClockBarUi();
     },
-    "switch-screen_clock_bar": function (val, d) {
-      state.clockBarOn = d.value === true || val === "ON";
-      syncClockBarUi();
-    },
-    "switch-clock_bar_enabled": function (val, d) {
-      state.clockBarOn = d.value === true || val === "ON";
-      syncClockBarUi();
-    },
     "switch-screen__network_status_icon": function (val, d) {
       state.networkStatusOn = d.value === true || val === "ON";
       syncClockBarUi();
     },
-    "switch-screen_network_status_icon": function (val, d) {
-      state.networkStatusOn = d.value === true || val === "ON";
-      syncClockBarUi();
-    },
-    "switch-network_status_enabled": function (val, d) {
-      state.networkStatusOn = d.value === true || val === "ON";
-      syncClockBarUi();
-    },
     "switch-screen__temperature_degree_symbol": function (val, d) {
-      state.temperatureDegreeSymbolOn = d.value === true || val === "ON";
-      syncClockBarUi();
-    },
-    "switch-screen_temperature_degree_symbol": function (val, d) {
-      state.temperatureDegreeSymbolOn = d.value === true || val === "ON";
-      syncClockBarUi();
-    },
-    "switch-temperature_degree_symbol_enabled": function (val, d) {
       state.temperatureDegreeSymbolOn = d.value === true || val === "ON";
       syncClockBarUi();
     },
@@ -120,12 +116,6 @@ function connectEvents() {
       renderPreview();
     },
     "number-screensaver_timeout": function (val, d) {
-      applyScreensaverTimeoutState(d);
-    },
-    "number-screen_saver__timeout": function (val, d) {
-      applyScreensaverTimeoutState(d);
-    },
-    "number-screen_saver_timeout": function (val, d) {
       applyScreensaverTimeoutState(d);
     },
     "number-home_screen_timeout": function (val) {
@@ -224,23 +214,7 @@ function connectEvents() {
       state.scheduleWakeTimeout = normalizeScheduleWakeTimeout(val);
       syncScreenScheduleUi();
     },
-    "number-screen_schedule_wake_timeout": function (val) {
-      state.scheduleWakeTimeout = normalizeScheduleWakeTimeout(val);
-      syncScreenScheduleUi();
-    },
-    "number-schedule_wake_timeout": function (val) {
-      state.scheduleWakeTimeout = normalizeScheduleWakeTimeout(val);
-      syncScreenScheduleUi();
-    },
     "number-screen__schedule_wake_brightness": function (val) {
-      state.scheduleWakeBrightness = normalizeScheduleWakeBrightness(val);
-      syncScreenScheduleUi();
-    },
-    "number-screen_schedule_wake_brightness": function (val) {
-      state.scheduleWakeBrightness = normalizeScheduleWakeBrightness(val);
-      syncScreenScheduleUi();
-    },
-    "number-schedule_wake_brightness": function (val) {
       state.scheduleWakeBrightness = normalizeScheduleWakeBrightness(val);
       syncScreenScheduleUi();
     },
@@ -248,23 +222,7 @@ function connectEvents() {
       state.scheduleDimmedBrightness = normalizeScheduleDimmedBrightness(val);
       syncScreenScheduleUi();
     },
-    "number-screen_schedule_dimmed_brightness": function (val) {
-      state.scheduleDimmedBrightness = normalizeScheduleDimmedBrightness(val);
-      syncScreenScheduleUi();
-    },
-    "number-schedule_dimmed_brightness": function (val) {
-      state.scheduleDimmedBrightness = normalizeScheduleDimmedBrightness(val);
-      syncScreenScheduleUi();
-    },
     "number-screen__schedule_clock_brightness": function (val) {
-      state.scheduleClockBrightness = normalizeScheduleClockBrightness(val);
-      syncScreenScheduleUi();
-    },
-    "number-screen_schedule_clock_brightness": function (val) {
-      state.scheduleClockBrightness = normalizeScheduleClockBrightness(val);
-      syncScreenScheduleUi();
-    },
-    "number-schedule_clock_brightness": function (val) {
       state.scheduleClockBrightness = normalizeScheduleClockBrightness(val);
       syncScreenScheduleUi();
     },
@@ -324,27 +282,6 @@ function connectEvents() {
       syncMonthNameUi();
       renderPreview();
     },
-    "text-ntp_server_1": function (val) {
-      state.ntpServer1 = normalizeNtpServer(val, NTP_SERVER_DEFAULTS[0]);
-      state.customNtpServers = state.customNtpServers || hasCustomNtpServers();
-      syncNtpServerUi();
-    },
-    "text-ntp_server_2": function (val) {
-      state.ntpServer2 = normalizeNtpServer(val, NTP_SERVER_DEFAULTS[1]);
-      state.customNtpServers = state.customNtpServers || hasCustomNtpServers();
-      syncNtpServerUi();
-    },
-    "text-ntp_server_3": function (val) {
-      state.ntpServer3 = normalizeNtpServer(val, NTP_SERVER_DEFAULTS[2]);
-      state.customNtpServers = state.customNtpServers || hasCustomNtpServers();
-      syncNtpServerUi();
-    },
-    "text-month_names": function (val) {
-      state.monthNames = normalizeMonthNames(val);
-      state.customMonthNames = hasCustomMonthNames();
-      syncMonthNameUi();
-      renderPreview();
-    },
     "select-screen__rotation": function (val, d) {
       state.screenRotation = normalizeScreenRotation(d.value || val || state.screenRotation);
       if (d.option && Array.isArray(d.option)) {
@@ -397,14 +334,6 @@ function connectEvents() {
       syncScreenRotationSelect();
       scheduleRender();
     },
-    "switch-developer_experimental_features": function (val, d) {
-      state.developerExperimentalFeatures = d.value === true || val === "ON";
-      if (els.setDeveloperExperimentalFeatures) {
-        els.setDeveloperExperimentalFeatures.checked = state.developerExperimentalFeatures;
-      }
-      syncScreenRotationSelect();
-      scheduleRender();
-    },
     "select-firmware__update_frequency": function (val, d) {
       state.firmwareUpdateControlsSupported = true;
       state.updateFrequency = d.value || val || state.updateFrequency;
@@ -415,6 +344,20 @@ function connectEvents() {
       syncFirmwareUpdateUi();
     },
   };
+
+  addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.clockBar, sseHandlers["switch-screen__clock_bar"]);
+  addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.networkStatus, sseHandlers["switch-screen__network_status_icon"]);
+  addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.temperatureDegreeSymbol, sseHandlers["switch-screen__temperature_degree_symbol"]);
+  addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.screensaverTimeout, sseHandlers["number-screensaver_timeout"]);
+  addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.scheduleWakeTimeout, sseHandlers["number-screen__schedule_wake_timeout"]);
+  addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.scheduleWakeBrightness, sseHandlers["number-screen__schedule_wake_brightness"]);
+  addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.scheduleDimmedBrightness, sseHandlers["number-screen__schedule_dimmed_brightness"]);
+  addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.scheduleClockBrightness, sseHandlers["number-screen__schedule_clock_brightness"]);
+  addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.ntpServer1, sseHandlers["text-screen__ntp_server_1"]);
+  addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.ntpServer2, sseHandlers["text-screen__ntp_server_2"]);
+  addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.ntpServer3, sseHandlers["text-screen__ntp_server_3"]);
+  addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.monthNames, sseHandlers["text-screen__month_names"]);
+  addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.developerExperimentalFeatures, sseHandlers["switch-developer__experimental_features"]);
 
   var ssePatterns = [
     {

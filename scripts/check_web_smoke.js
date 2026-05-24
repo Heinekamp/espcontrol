@@ -55,6 +55,20 @@ function assertGeneratedRotationOptions(slug, generated, key, options) {
 
 const hooks = loadHooks();
 assert(hooks, "web test hooks were not exported");
+assert.deepStrictEqual(Array.from(hooks.SSE_ALIAS_GROUPS.clockBar), [
+  "switch-screen__clock_bar",
+  "switch-screen_clock_bar",
+  "switch-clock_bar_enabled",
+], "clock bar SSE aliases are registered together");
+assert.deepStrictEqual(Array.from(hooks.SSE_ALIAS_GROUPS.scheduleWakeTimeout), [
+  "number-screen__schedule_wake_timeout",
+  "number-screen_schedule_wake_timeout",
+  "number-schedule_wake_timeout",
+], "schedule wake timeout SSE aliases are registered together");
+assert.deepStrictEqual(Array.from(hooks.SSE_ALIAS_GROUPS.ntpServer1), [
+  "text-screen__ntp_server_1",
+  "text-ntp_server_1",
+], "NTP server SSE aliases are registered together");
 
 const manifest = JSON.parse(fs.readFileSync(DEVICE_MANIFEST, "utf8"));
 for (const slug of Object.keys(manifest.devices || {})) {
