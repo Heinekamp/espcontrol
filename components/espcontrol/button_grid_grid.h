@@ -2,6 +2,10 @@
 
 // Internal implementation detail for button_grid.h. Include button_grid.h from device YAML.
 
+#ifdef ESP_PLATFORM
+#include "esp_heap_caps.h"
+#endif
+
 // =============================================================================
 // GRID BOOT PHASES - Consolidated on_boot logic for all devices
 // =============================================================================
@@ -35,6 +39,17 @@ struct GridConfig {
   std::function<void()> pause_home_idle;
   std::function<void()> resume_home_idle;
 };
+
+inline void grid_log_memory(const char *stage) {
+#ifdef ESP_PLATFORM
+  ESP_LOGI("sensors", "Phase 2 %s heap: internal=%u psram=%u",
+    stage,
+    (unsigned) heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+    (unsigned) heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+#else
+  (void) stage;
+#endif
+}
 
 inline DisplayProfile display_profile_from_grid_config(const GridConfig &cfg) {
   DisplayProfile profile;
@@ -549,11 +564,16 @@ inline void grid_phase2(
     esphome::text::Text **sp_ext_configs,
     esphome::text::Text **sp_ext2_configs,
     esphome::text::Text **sp_ext3_configs,
+    esphome::text::Text **sp_ext4_configs,
+    esphome::text::Text **sp_ext5_configs,
+    esphome::text::Text **sp_ext6_configs,
+    esphome::text::Text **sp_ext7_configs,
     const std::string &order_str,
     const std::string &on_hex, const std::string &off_hex,
     const std::string &sensor_hex,
     lv_obj_t *main_page_obj) {
   ESP_LOGI("sensors", "Phase 2: subscriptions + subpages start (%lu ms)", esphome::millis());
+  grid_log_memory("start");
   set_display_temperature_unit(cfg.temperature_unit, cfg.timezone);
   const DisplayProfile display = display_profile_from_grid_config(cfg);
   display_set_width_axis(display);
@@ -997,7 +1017,11 @@ inline void grid_phase2(
     std::string sp_cfg = optional_text_state(sp_configs, si) +
       optional_text_state(sp_ext_configs, si) +
       optional_text_state(sp_ext2_configs, si) +
-      optional_text_state(sp_ext3_configs, si);
+      optional_text_state(sp_ext3_configs, si) +
+      optional_text_state(sp_ext4_configs, si) +
+      optional_text_state(sp_ext5_configs, si) +
+      optional_text_state(sp_ext6_configs, si) +
+      optional_text_state(sp_ext7_configs, si);
     if (sp_cfg.empty()) continue;
 
     auto sp_btns = parse_subpage_config(sp_cfg);
@@ -1544,7 +1568,23 @@ inline void grid_phase2(
     lv_obj_set_user_data(slots[si].btn, (void *)sub_scr);
   }
   refresh_weather_forecast_cards();
+  grid_log_memory("end");
   ESP_LOGI("sensors", "Phase 2: done (%lu ms)", esphome::millis());
+}
+
+inline void grid_phase2(
+    BtnSlot *slots, const GridConfig &cfg,
+    esphome::text::Text **sp_configs,
+    esphome::text::Text **sp_ext_configs,
+    esphome::text::Text **sp_ext2_configs,
+    esphome::text::Text **sp_ext3_configs,
+    const std::string &order_str,
+    const std::string &on_hex, const std::string &off_hex,
+    const std::string &sensor_hex,
+    lv_obj_t *main_page_obj) {
+  grid_phase2(slots, cfg, sp_configs, sp_ext_configs, sp_ext2_configs, sp_ext3_configs,
+    nullptr, nullptr, nullptr, nullptr,
+    order_str, on_hex, off_hex, sensor_hex, main_page_obj);
 }
 
 inline void grid_phase2(
