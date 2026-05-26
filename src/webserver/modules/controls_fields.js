@@ -176,12 +176,13 @@ function renderCardEntityField(panel, b, helpers, metadata) {
   var entity = metadata.entity || {};
   var bindName = Object.prototype.hasOwnProperty.call(entity, "bindName") ? entity.bindName : "entity";
   var value = entity.value != null ? cardMetadataValue(entity.value, b, helpers) : (bindName ? b[bindName] : "");
+  var domains = cardMetadataValue(entity.domains, b, helpers) || [];
   var field = helpers.entityField(
     entity.label || "Entity",
     helpers.idPrefix + (entity.idSuffix || "entity"),
     value || "",
     entity.placeholder || "",
-    entity.domains || [],
+    domains,
     bindName,
     entity.rerender !== false,
     entity.requiredMessage || ""

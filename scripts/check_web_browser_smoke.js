@@ -481,13 +481,25 @@ async function assertBackupImportSmoke(page, posts, slug) {
   );
 }
 
-async function assertEditAndApplySmoke(page, posts) {
+async function entitySuggestionValues(page, inputSelector) {
+  await page.locator(inputSelector).fill("");
+  await page.waitForSelector(".sp-entity-dropdown.sp-open .sp-entity-option");
+  return page.locator(".sp-entity-dropdown.sp-open .sp-entity-option").evaluateAll((options) => {
+    return options.map((option) => option.textContent || "");
+  });
+}
+
+async function assertEditAndApplySmoke(page, posts, errors) {
   const before = posts.length;
   await page.getByRole("tab", { name: "Screen" }).click();
   await page.waitForSelector("#sp-screen.sp-page.active");
 
   await page.locator('.sp-main [data-slot="1"]').click();
   await page.getByRole("button", { name: /Edit/ }).click();
+  const switchSuggestions = await entitySuggestionValues(page, "#sp-inp-entity");
+  assert(switchSuggestions.includes("light.kitchen"), "switch card suggestions include a recently used light");
+  assert(!switchSuggestions.includes("sensor.energy"), "switch card suggestions exclude recently used sensors");
+  assert(!switchSuggestions.includes("media_player.living"), "switch card suggestions exclude recently used media players");
   await page.locator("#sp-inp-label").fill("Kitchen Main");
   await page.locator("#sp-inp-entity").fill("switch.kitchen_main");
   await page.getByRole("button", { name: "Save" }).click();
@@ -525,6 +537,7 @@ async function assertEditAndApplySmoke(page, posts) {
     name: "apply_configuration",
     action: "press",
   }, "apply configuration", before);
+  assert.deepStrictEqual(errors, [], "browser errors were reported during edit interactions");
 }
 
 async function runCase(browser, testCase) {
@@ -561,7 +574,7 @@ async function runCase(browser, testCase) {
     await assertEmptyCellSettings(page, testCase.name);
     if (testCase.exerciseInteractions) {
       await assertBackupImportSmoke(page, posts, testCase.slug);
-      await assertEditAndApplySmoke(page, posts);
+      await assertEditAndApplySmoke(page, posts, errors);
     }
   } catch (error) {
     fs.mkdirSync(FAILURE_DIR, { recursive: true });
