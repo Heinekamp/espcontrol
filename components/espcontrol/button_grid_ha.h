@@ -4,34 +4,11 @@
 
 // Internal implementation detail for button_grid.h. Include button_grid.h from device YAML.
 
-#ifdef ESP_PLATFORM
-#include "esp_heap_caps.h"
-#endif
-
 // ── Home Assistant API boundary ──────────────────────────────────────
 
 using HomeAssistantStateCallback = std::function<void(esphome::StringRef)>;
 using HomeAssistantActionResponseCallback =
   std::function<void(const esphome::api::ActionResponse &)>;
-
-inline bool ha_attribute_subscription_heap_available(const std::string &entity_id,
-                                                     const std::string &attribute) {
-#ifdef ESP_PLATFORM
-  constexpr size_t MIN_INTERNAL_HEAP_FOR_HA_SUBSCRIPTION = 28 * 1024;
-  size_t free_internal = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
-  if (free_internal < MIN_INTERNAL_HEAP_FOR_HA_SUBSCRIPTION) {
-    ESP_LOGW("ha", "Skipping HA attribute subscription for %s attribute %s; low internal heap: %u bytes",
-      entity_id.c_str(),
-      attribute.c_str(),
-      (unsigned) free_internal);
-    return false;
-  }
-#else
-  (void) entity_id;
-  (void) attribute;
-#endif
-  return true;
-}
 
 inline bool ha_api_available() {
   return esphome::api::global_api_server != nullptr;
@@ -109,7 +86,6 @@ inline bool ha_subscribe_attribute(const std::string &entity_id,
                                    const std::string &attribute,
                                    HomeAssistantStateCallback callback) {
   if (!ha_api_available() || entity_id.empty()) return false;
-  if (!ha_attribute_subscription_heap_available(entity_id, attribute)) return false;
   esphome::api::global_api_server->subscribe_home_assistant_state(
     entity_id, attribute, std::move(callback));
   return true;

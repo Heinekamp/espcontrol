@@ -61,8 +61,8 @@ def firmware_ha_boundary_errors(firmware_dir: Path, root: Path) -> list[str]:
     attribute_helper = ATTRIBUTE_HELPER_PATTERN.search(text)
     if not attribute_helper:
         errors.append(f"{rel}: missing ha_subscribe_attribute helper")
-    elif "ha_attribute_subscription_heap_available" not in attribute_helper.group("body"):
-        errors.append(f"{rel}: keep optional HA attribute subscriptions behind the low-heap guard")
+    elif "heap_available" in attribute_helper.group("body"):
+        errors.append(f"{rel}: keep HA metadata attribute subscriptions off the low-heap guard")
 
     return errors
 
