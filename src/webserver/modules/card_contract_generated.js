@@ -253,7 +253,7 @@ var CARD_CONTRACT_CARDS = {
       },
       {
         "name": "large_numbers",
-        "label": "Large Date / Time Numbers",
+        "label": "Large Clock",
         "kind": "flag"
       }
     ],
@@ -289,7 +289,7 @@ var CARD_CONTRACT_CARDS = {
       },
       {
         "name": "large_numbers",
-        "label": "Large Date / Time Numbers",
+        "label": "Large Clock",
         "kind": "flag"
       }
     ],
@@ -1043,7 +1043,7 @@ var CARD_CONTRACT_CARDS = {
       },
       {
         "name": "large_numbers",
-        "label": "Large Date / Time Numbers",
+        "label": "Large Clock",
         "kind": "flag"
       }
     ],

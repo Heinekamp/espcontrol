@@ -206,7 +206,7 @@
         },
         {
           "name": "large_numbers",
-          "label": "Large Date / Time Numbers",
+          "label": "Large Clock",
           "kind": "flag"
         }
       ],
@@ -237,7 +237,7 @@
         },
         {
           "name": "large_numbers",
-          "label": "Large Date / Time Numbers",
+          "label": "Large Clock",
           "kind": "flag"
         }
       ],
@@ -877,7 +877,7 @@
         },
         {
           "name": "large_numbers",
-          "label": "Large Date / Time Numbers",
+          "label": "Large Clock",
           "kind": "flag"
         }
       ],

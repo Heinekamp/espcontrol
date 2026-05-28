@@ -13,8 +13,8 @@ This generated reference lists stable setup facts from the shared card contract.
 | Action | action | scene, script, automation, button, vacuum, input_button, input_boolean, input_number, input_select, select | Yes | Own picker item | Large State Numbers | Visible |
 | Alarm | alarm | alarm_control_panel | Yes | Own picker item | Type: control_panel, away, home, disarm; PIN required for arming; PIN required for disarming; Visible Actions: away, home, disarm; Icon Display: static, status; Label Display: name, status | Visible |
 | Alarm | alarm_action | alarm_control_panel | Yes | Alarm (alarm) | None | Visible |
-| Date & Time | calendar | sensor | Yes | Own picker item | Type: clock, datetime, default, timezone; Large Date / Time Numbers | Visible |
-| Date & Time | clock | None | Yes | Date & Time (calendar) | Type: clock, datetime, default, timezone; Large Date / Time Numbers | Visible |
+| Date & Time | calendar | sensor | Yes | Own picker item | Type: clock, datetime, default, timezone; Large Clock | Visible |
+| Date & Time | clock | None | Yes | Date & Time (calendar) | Type: clock, datetime, default, timezone; Large Clock | Visible |
 | Climate | climate | climate | Yes | Own picker item | Label Display: label, status, actual, target; Icon & Temperatures: icon, actual, target; Large Temperature Numbers | Visible |
 | Cover | cover | cover | Yes | Own picker item | Type: default, tilt, toggle, open, close, stop, set_position; Position: 0-100 | Visible |
 | Doors & Windows | door_window | binary_sensor, sensor | Yes | Own picker item | None | Visible |
@@ -38,6 +38,6 @@ This generated reference lists stable setup facts from the shared card contract.
 | Sensor | sensor | sensor, binary_sensor, text_sensor | Yes | Own picker item | Large Sensor Numbers; Active Color | Visible |
 | Slider | slider | light, fan | Yes | Own picker item | None | Visible |
 | Subpage | subpage | None | No | Own picker item | Subpage Type: default, lights, media; Large State Numbers | Visible |
-| Date & Time | timezone | None | Yes | Date & Time (calendar) | Type: clock, datetime, default, timezone; Large Date / Time Numbers | Visible |
+| Date & Time | timezone | None | Yes | Date & Time (calendar) | Type: clock, datetime, default, timezone; Large Clock | Visible |
 | Weather | weather | weather | Yes | Own picker item | Type: default, today, tomorrow; Large Temperature Numbers | Visible |
 | Weather Forecast | weather_forecast | weather | Yes | Own picker item | None | Hidden |

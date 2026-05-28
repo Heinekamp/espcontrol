@@ -19,7 +19,7 @@ var DATE_TIME_CARD_METADATA = {
     },
   },
   largeNumbers: {
-    label: "Large Date / Time Numbers",
+    label: "Large Clock",
     idSuffix: "large-date-time-numbers",
     supportedCardSizes: [3, 4],
     hideLabelCardSizes: [3],

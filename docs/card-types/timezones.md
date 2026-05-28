@@ -15,7 +15,7 @@ World clock cards are read-only — tapping them does nothing. They do not need 
 1. Select a card and change its type to **Date & Time**.
 2. Set **Type** to **World Clock**.
 3. Choose the city/timezone from the **City / Timezone** dropdown.
-4. On a **Wide** or **Large** card, turn on **Large Date / Time Numbers** if you want a larger clock. On a **Wide** card, the city label is hidden so the larger clock has room.
+4. On a **Wide** or **Large** card, turn on **Large Clock** if you want a larger clock. On a **Wide** card, the city label is hidden so the larger clock has room.
 5. Apply the configuration so the panel restarts with the new card.
 
 ## How It Works on the Panel
