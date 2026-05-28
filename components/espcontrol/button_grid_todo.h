@@ -343,7 +343,10 @@ inline void todo_modal_render_items(TodoCardCtx *ctx, const std::vector<TodoItem
   lv_coord_t checkbox_size = ctx->label_font && ctx->label_font->line_height > 0
     ? ctx->label_font->line_height
     : control_modal_scaled_px(15, layout.short_side);
-  if (checkbox_size < 14) checkbox_size = 14;
+  bool compact_portrait = control_modal_uses_compact_portrait_tuning(layout);
+  if (compact_portrait) checkbox_size = checkbox_size * 3 / 4;
+  lv_coord_t min_checkbox_size = compact_portrait ? 12 : 14;
+  if (checkbox_size < min_checkbox_size) checkbox_size = min_checkbox_size;
   lv_coord_t row_pad = control_modal_scaled_px(6, layout.short_side);
   if (row_pad < 4) row_pad = 4;
   lv_coord_t row_h = checkbox_size + row_pad;
@@ -486,7 +489,9 @@ inline void todo_card_open_modal(TodoCardCtx *ctx) {
 
   ControlModalLayout &layout = shell.layout;
   lv_coord_t content_w = shell.content_w;
-  lv_coord_t gap = control_modal_scaled_px(12, layout.short_side);
+  lv_coord_t gap = control_modal_scaled_px(
+    control_modal_uses_compact_portrait_tuning(layout) ? 28 : 12,
+    layout.short_side);
   if (gap < 8) gap = 8;
   lv_coord_t title_y = layout.inset + layout.back_size / 2;
   lv_coord_t list_y = layout.inset + layout.back_size + gap;
@@ -506,7 +511,9 @@ inline void todo_card_open_modal(TodoCardCtx *ctx) {
   lv_obj_set_style_text_color(ui.title_lbl, lv_color_hex(DARK_TEXT_MUTED), LV_PART_MAIN);
   lv_obj_align(ui.title_lbl, LV_ALIGN_TOP_MID, 0, title_y - layout.back_size / 2);
 
-  lv_coord_t row_gap = control_modal_scaled_px(10, layout.short_side);
+  lv_coord_t row_gap = control_modal_scaled_px(
+    control_modal_uses_compact_portrait_tuning(layout) ? 18 : 10,
+    layout.short_side);
   if (row_gap < 8) row_gap = 8;
   ui.list = control_modal_create_scroll_list(ui.panel, list_w, list_h, row_gap);
   lv_obj_align(ui.list, LV_ALIGN_TOP_LEFT, layout.inset + list_pad, list_y);
