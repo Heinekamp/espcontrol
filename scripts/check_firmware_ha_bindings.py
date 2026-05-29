@@ -320,6 +320,8 @@ def firmware_s3_api_errors(
         errors.append(f"{rel}: keep the S3 native API send queue high enough for HA reconnect bursts")
     if "max_connections: 2" not in text:
         errors.append(f"{rel}: keep the S3 native API connection pool small")
+    if "ESPCONTROL_DISABLE_TODO=1" not in text:
+        errors.append(f"{rel}: keep the S3 todo list disabled until its HA action response path is stable")
 
     if api_navigate_path.exists():
         api_rel = api_navigate_path.relative_to(root)
@@ -1110,19 +1112,32 @@ def run_self_test() -> int:
         ("keep the S3 native API send queue high enough",),
     )
     expect_s3_api_errors(
+        "S3 todo enabled",
+        "esphome:\n  platformio_options:\n    build_flags:\n"
+        "      - \"-DESPCONTROL_TODO_LITE=1\"\n"
+        "api:\n  max_connections: 2\n  max_send_queue: 12\n",
+        ("keep the S3 todo list disabled",),
+    )
+    expect_s3_api_errors(
         "S3 includes navigate API package",
+        "esphome:\n  platformio_options:\n    build_flags:\n"
+        "      - \"-DESPCONTROL_DISABLE_TODO=1\"\n"
         "api:\n  max_connections: 2\n  max_send_queue: 12\n",
         ("omit the Home Assistant navigate API action on S3",),
         s3_packages_text="packages:\n  api_navigate: !include ../../common/device/api_navigate.yaml\n",
     )
     expect_s3_api_errors(
         "navigate action left in shared core",
+        "esphome:\n  platformio_options:\n    build_flags:\n"
+        "      - \"-DESPCONTROL_DISABLE_TODO=1\"\n"
         "api:\n  max_connections: 2\n  max_send_queue: 12\n",
         ("keep the navigate action out of core_infra",),
         core_text="api:\n  actions:\n    - action: navigate\n",
     )
     expect_s3_api_errors(
         "P4 package missing navigate API package",
+        "esphome:\n  platformio_options:\n    build_flags:\n"
+        "      - \"-DESPCONTROL_DISABLE_TODO=1\"\n"
         "api:\n  max_connections: 2\n  max_send_queue: 12\n",
         ("include the dedicated Home Assistant navigate API package",),
         extra_packages={"esp32-p4-86": "packages:\n  device: !include device/device.yaml\n"},

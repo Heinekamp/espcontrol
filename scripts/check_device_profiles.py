@@ -71,6 +71,12 @@ def test_generated_web(profile_slugs: list[str]) -> None:
         assert slug in text, f"{slug}: generated web bundle has wrong device id"
 
 
+def test_s3_todo_card_disabled(profiles: dict[str, dict]) -> None:
+    s3 = profiles["guition-esp32-s3-4848s040"]
+    disabled = s3.get("web", {}).get("disabledCardTypes", [])
+    assert "todo" in disabled, "S3 todo card must stay hidden until HA reconnect stability is fixed"
+
+
 def test_generated_yaml(profiles: dict[str, dict]) -> None:
     for slug, profile in profiles.items():
         package_path = ROOT / "devices" / slug / "packages.yaml"
@@ -110,6 +116,7 @@ def main() -> int:
     assert profile_slugs == compatibility_required_slugs(), "current compatibility device slug fixture is stale"
     test_public_device_capabilities(profile_slugs)
     test_generated_web(profile_slugs)
+    test_s3_todo_card_disabled(profiles)
     test_generated_yaml(profiles)
     test_setup_icon_fonts(profile_slugs)
     test_firmware_matrices(profile_slugs)
