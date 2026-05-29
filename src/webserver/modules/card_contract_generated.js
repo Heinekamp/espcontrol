@@ -1036,6 +1036,8 @@ var CARD_CONTRACT_CARDS = {
         "values": [
           "",
           "lights",
+          "climate",
+          "presence",
           "media"
         ],
         "defaultValue": ""

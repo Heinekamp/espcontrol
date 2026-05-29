@@ -148,6 +148,10 @@ int main() {
   assert(!card_large_numbers_enabled(subpage_lights));
   auto subpage_media = parse_cfg("media_player.living_room;Media;Speaker;Auto;indicator;;subpage;;subpage_kind=media");
   assert(subpage_media.options == "subpage_kind=media");
+  auto subpage_climate = parse_cfg("climate.living_room;Climate;Thermostat;Auto;indicator;;subpage;;subpage_kind=climate");
+  assert(subpage_climate.options == "subpage_kind=climate");
+  auto subpage_presence = parse_cfg("person.jane;Presence;Account;Auto;indicator;;subpage;;subpage_kind=presence");
+  assert(subpage_presence.options == "subpage_kind=presence");
   auto subpage_bad_kind = parse_cfg("media_player.bad;Bad;Speaker;Auto;indicator;;subpage;;subpage_kind=audio");
   assert(subpage_bad_kind.options == "");
 

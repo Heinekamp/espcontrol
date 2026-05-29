@@ -257,7 +257,8 @@ inline std::string sensor_card_options_normalized(const std::string &options,
 }
 
 inline std::string normalize_subpage_kind(const std::string &value) {
-  return value == "lights" || value == "media" ? value : "";
+  return value == "lights" || value == "media" ||
+    value == "climate" || value == "presence" ? value : "";
 }
 
 inline std::string subpage_card_options_normalized(const std::string &options,

@@ -300,7 +300,8 @@ function normalizeMediaOptions(options, mode) {
 
 function normalizeSubpageKind(value) {
   value = String(value || "").trim();
-  return value === "lights" || value === "media" ? value : "";
+  return value === "lights" || value === "media" ||
+    value === "climate" || value === "presence" ? value : "";
 }
 
 function subpageKind(b) {
@@ -314,6 +315,12 @@ function subpagePresetDefaults(kind) {
   }
   if (kind === "media") {
     return { label: "Media", icon: "Speaker", entityDomain: "media_player" };
+  }
+  if (kind === "climate") {
+    return { label: "Climate", icon: "Thermostat", entityDomain: "climate" };
+  }
+  if (kind === "presence") {
+    return { label: "Presence", icon: "Account", entityDomain: "person" };
   }
   return null;
 }

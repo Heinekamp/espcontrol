@@ -37,7 +37,7 @@ This generated reference lists stable setup facts from the shared card contract.
 | Todo | todo | todo | Yes | Own picker item | Icon Display: icon, count; Large Todo Numbers | Visible |
 | Sensor | sensor | sensor, binary_sensor, text_sensor | Yes | Own picker item | Large Sensor Numbers; Active Color; Custom State Labels; Low Label; High Label | Visible |
 | Slider | slider | light, fan | Yes | Own picker item | None | Visible |
-| Subpage | subpage | None | No | Own picker item | Subpage Type: default, lights, media; Large State Numbers | Visible |
+| Subpage | subpage | None | No | Own picker item | Subpage Type: default, lights, climate, presence, media; Large State Numbers | Visible |
 | Date & Time | timezone | None | Yes | Date & Time (calendar) | Type: clock, datetime, default, timezone; Large Clock | Visible |
 | Weather | weather | weather | Yes | Own picker item | Type: default, today, tomorrow; Large Temperature Numbers | Visible |
 | Weather Forecast | weather_forecast | weather | Yes | Own picker item | None | Hidden |

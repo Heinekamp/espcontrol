@@ -1669,6 +1669,24 @@ const subpageMediaPreset = buttonShape({
   type: "subpage",
   options: "subpage_kind=media",
 });
+const subpageClimatePreset = buttonShape({
+  entity: "climate.living_room",
+  label: "Climate",
+  icon: "Thermostat",
+  icon_on: "Auto",
+  sensor: "indicator",
+  type: "subpage",
+  options: "subpage_kind=climate",
+});
+const subpagePresencePreset = buttonShape({
+  entity: "person.jane",
+  label: "Presence",
+  icon: "Account",
+  icon_on: "Auto",
+  sensor: "indicator",
+  type: "subpage",
+  options: "subpage_kind=presence",
+});
 
 assertButtonRoundTrip(hooks, "subpage state off", subpageStateOff, false);
 assertButtonRoundTrip(hooks, "subpage state icon", subpageStateIcon, false);
@@ -1678,6 +1696,8 @@ assertButtonRoundTrip(hooks, "subpage state numeric precision", subpageStateNume
 assertButtonRoundTrip(hooks, "subpage state text", subpageStateText, false);
 assertButtonRoundTrip(hooks, "subpage lights preset", subpageLightsPreset, false);
 assertButtonRoundTrip(hooks, "subpage media preset", subpageMediaPreset, false);
+assertButtonRoundTrip(hooks, "subpage climate preset", subpageClimatePreset, false);
+assertButtonRoundTrip(hooks, "subpage presence preset", subpagePresencePreset, false);
 
 assert.strictEqual(hooks.subpageStateDisplayMode(subpageStateOff), "off", "subpage state off");
 assert.strictEqual(hooks.subpageStateDisplayMode(subpageStateIcon), "icon", "subpage icon state");
@@ -1687,6 +1707,8 @@ assert.strictEqual(hooks.subpageStateDisplayMode(subpageStateText), "text", "sub
 assert.strictEqual(hooks.subpageKind(subpageStateOff), "", "generic subpage has no preset kind");
 assert.strictEqual(hooks.subpageKind(subpageLightsPreset), "lights", "lights subpage preset kind");
 assert.strictEqual(hooks.subpageKind(subpageMediaPreset), "media", "media subpage preset kind");
+assert.strictEqual(hooks.subpageKind(subpageClimatePreset), "climate", "climate subpage preset kind");
+assert.strictEqual(hooks.subpageKind(subpagePresencePreset), "presence", "presence subpage preset kind");
 assert.deepStrictEqual(buttonShape(hooks.parseButtonConfig(
   "media_player.bad;Bad;Speaker;Auto;indicator;;subpage;;subpage_kind=audio"
 )), buttonShape({

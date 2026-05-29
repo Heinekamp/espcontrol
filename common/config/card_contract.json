@@ -870,7 +870,7 @@
           "name": "subpage_kind",
           "label": "Subpage Type",
           "kind": "choice",
-          "values": ["", "lights", "media"],
+          "values": ["", "lights", "climate", "presence", "media"],
           "defaultValue": ""
         },
         {

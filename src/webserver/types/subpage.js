@@ -6,6 +6,8 @@ var SUBPAGE_CARD_METADATA = {
     options: [
       ["", "Generic"],
       ["lights", "Lights"],
+      ["climate", "Climate"],
+      ["presence", "Presence"],
       ["media", "Media"],
     ],
   },
@@ -58,6 +60,24 @@ var SUBPAGE_CARD_METADATA = {
     bindName: "entity",
     rerender: true,
     requiredMessage: "Add a media entity before saving.",
+  },
+  climateEntity: {
+    label: "Climate Entity",
+    idSuffix: "climate-state-entity",
+    placeholder: "e.g. climate.living_room",
+    domains: ["climate"],
+    bindName: "entity",
+    rerender: true,
+    requiredMessage: "Add a climate entity before saving.",
+  },
+  presenceEntity: {
+    label: "Presence Entity",
+    idSuffix: "presence-state-entity",
+    placeholder: "e.g. person.jane",
+    domains: ["person", "device_tracker", "binary_sensor", "input_boolean"],
+    bindName: "entity",
+    rerender: true,
+    requiredMessage: "Add a presence entity before saving.",
   },
   sensorEntity: {
     label: "Sensor Entity",
@@ -124,11 +144,15 @@ registerButtonType("subpage", {
       }),
     });
 
-    if (kind === "lights" || kind === "media") {
+    if (kind === "lights" || kind === "media" || kind === "climate" || kind === "presence") {
       helpers.renderCardEntityField(panel, b, helpers, {
         entity: kind === "lights"
           ? SUBPAGE_CARD_METADATA.lightsEntity
-          : SUBPAGE_CARD_METADATA.mediaEntity,
+          : (kind === "media"
+            ? SUBPAGE_CARD_METADATA.mediaEntity
+            : (kind === "climate"
+              ? SUBPAGE_CARD_METADATA.climateEntity
+              : SUBPAGE_CARD_METADATA.presenceEntity)),
       });
       appendEditSubpageButton(panel, slot);
       return;
