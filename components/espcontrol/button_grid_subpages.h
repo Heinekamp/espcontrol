@@ -253,7 +253,8 @@ inline BtnSlot create_dynamic_card_slot(lv_obj_t *btn,
                                         const lv_font_t *icon_font,
                                         const lv_font_t *value_font,
                                         const lv_font_t *label_font,
-                                        lv_color_t text_color) {
+                                        lv_color_t text_color,
+                                        const lv_font_t *subpage_icon_font = nullptr) {
   BtnSlot slot{};
   slot.config = nullptr;
   slot.btn = btn;
@@ -274,10 +275,11 @@ inline BtnSlot create_dynamic_card_slot(lv_obj_t *btn,
   configure_button_label_wrap(slot.text_lbl);
 
   slot.subpage_lbl = lv_label_create(btn);
-  if (label_font) lv_obj_set_style_text_font(slot.subpage_lbl, label_font, LV_PART_MAIN);
+  const lv_font_t *chevron_font = subpage_icon_font ? subpage_icon_font : icon_font;
+  if (chevron_font) lv_obj_set_style_text_font(slot.subpage_lbl, chevron_font, LV_PART_MAIN);
   lv_obj_set_style_text_color(slot.subpage_lbl, text_color, LV_PART_MAIN);
   lv_obj_set_style_text_opa(slot.subpage_lbl, LV_OPA_50, LV_PART_MAIN);
-  lv_label_set_text(slot.subpage_lbl, "›");
+  lv_label_set_text(slot.subpage_lbl, "\U000F0142");
   lv_obj_align(slot.subpage_lbl, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
   lv_obj_add_flag(slot.subpage_lbl, LV_OBJ_FLAG_HIDDEN);
   return slot;
