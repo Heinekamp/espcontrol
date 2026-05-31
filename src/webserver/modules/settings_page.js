@@ -276,7 +276,6 @@ function buildSettingsPage(parent) {
 
   var ntpField = document.createElement("div");
   ntpField.className = "sp-field";
-  ntpField.appendChild(fieldLabel("NTP Servers", "sp-set-custom-ntp-servers"));
   state.customNtpServers = state.customNtpServers || hasCustomNtpServers();
   var customNtpServers = toggleRow("Custom NTP Servers", "sp-set-custom-ntp-servers", state.customNtpServers);
   ntpField.appendChild(customNtpServers.row);
@@ -330,7 +329,6 @@ function buildSettingsPage(parent) {
 
   var monthNamesField = document.createElement("div");
   monthNamesField.className = "sp-field";
-  monthNamesField.appendChild(fieldLabel("Advanced Date Labels", "sp-set-custom-month-names"));
   state.monthNames = normalizeMonthNames(state.monthNames);
   state.customMonthNames = state.customMonthNames || hasCustomMonthNames();
   var customMonthNames = toggleRow("Custom Month Names", "sp-set-custom-month-names", state.customMonthNames);
