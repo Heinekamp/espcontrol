@@ -248,7 +248,13 @@ def firmware_weather_request_errors(firmware_dir: Path, root: Path) -> list[str]
         or "response_data[entity] if response_data is not none and entity in response_data else none" not in text
     ):
         errors.append(f"{rel}: accept both direct and entity-keyed Home Assistant forecast response shapes")
-    if "entity_response['temperature_unit']" not in text or "state_attr(entity, 'temperature_unit')" not in text:
+    if (
+        "entity_response['temperature_unit']" not in text
+        or "entity_response['unit_of_measurement']" not in text
+        or "entity_response['unit']" not in text
+        or "state_attr(entity, 'temperature_unit')" not in text
+        or "state_attr(entity, 'unit_of_measurement')" not in text
+    ):
         errors.append(f"{rel}: preserve forecast temperature units from response data or weather entity attributes")
     if (
         "native_temperature" not in text
@@ -265,7 +271,15 @@ def firmware_weather_request_errors(firmware_dir: Path, root: Path) -> list[str]
         or "min_temp" not in text
     ):
         errors.append(f"{rel}: accept max/min weather forecast temperature field aliases")
-    if "item_unit" not in text or "today['temperature_unit']" not in text or "tomorrow['native_temperature_unit']" not in text:
+    if (
+        "item_unit" not in text
+        or "today['temperature_unit']" not in text
+        or "today['unit_of_measurement']" not in text
+        or "today['unit']" not in text
+        or "tomorrow['native_temperature_unit']" not in text
+        or "tomorrow['unit_of_measurement']" not in text
+        or "tomorrow['unit']" not in text
+    ):
         errors.append(f"{rel}: preserve forecast temperature units from individual forecast items")
     if "parse_weather_forecast_temp" in text and "std::isfinite(parsed)" not in text:
         errors.append(f"{rel}: reject non-finite weather forecast temperatures before rendering")
