@@ -1653,6 +1653,14 @@ inline void grid_phase2(
         }
         continue;
       }
+      if (weather_card_shows_forecast(sb_cfg)) {
+        continue;
+      }
+      if (sb_cfg.type == "weather") {
+        if (!sb_cfg.entity.empty())
+          subscribe_weather_state(sub_slot.icon_lbl, sub_slot.text_lbl, sb_cfg.entity);
+        continue;
+      }
       if (sb_cfg.type == "internal") {
         bool push_mode = internal_relay_push_mode(sb_cfg);
         if (!push_mode && !sb_cfg.entity.empty()) {
