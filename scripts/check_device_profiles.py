@@ -478,15 +478,13 @@ def test_current_weather_state_updates_availability() -> None:
     assert "weather_forecast_cancel_pending_requests();" in grid, (
         "dashboard reconfiguration must cancel stale weather forecast action responses"
     )
-    subpage_match = re.search(
-        r"if \(sb_cfg\.type == \"climate\"\)[\s\S]*?if \(sb_cfg\.type == \"internal\"\)",
-        grid,
-    )
     assert (
-        subpage_match
-        and "if (weather_card_shows_forecast(sb_cfg))" in subpage_match.group(0)
-        and "if (sb_cfg.type == \"weather\")" in subpage_match.group(0)
-        and "subscribe_weather_state(sub_slot.icon_lbl, sub_slot.text_lbl, sb_cfg.entity)" in subpage_match.group(0)
+        "if (bind_basic_sensor_card(sub_slot, sb_cfg, palette)) continue;" in grid
+        and "if (bind_passive_card_sources(sub_slot, sb_cfg)) continue;" in grid
+    ), "subpage weather cards must use the same passive weather binding path as main-grid weather cards"
+    assert (
+        "if (p.type == \"weather\")" in grid
+        and "subscribe_weather_state(s.icon_lbl, s.text_lbl, p.entity)" in grid
     ), "subpage weather cards must use the same weather binding as main-grid weather cards"
 
 
