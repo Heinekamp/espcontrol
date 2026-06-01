@@ -747,25 +747,26 @@ inline void grid_phase2(
   palette.off_val = has_off ? off_val : DEFAULT_OFF_COLOR;
   palette.sensor_val = has_sensor_color ? sensor_val : DEFAULT_TERTIARY_COLOR;
 
-  OrderResult parsed;
+  OrderResult parsed, order;
   parse_order_string(order_str, NS, parsed);
+  clear_spanned_cells(parsed, NS, COLS, order);
   lv_obj_t *first_card = nullptr;
-  if (parsed.positions[0] >= 1 && parsed.positions[0] <= NS) {
-    first_card = slots[parsed.positions[0] - 1].btn;
+  if (order.positions[0] >= 1 && order.positions[0] <= NS) {
+    first_card = slots[order.positions[0] - 1].btn;
   } else if (NS > 0) {
     first_card = slots[0].btn;
   }
   set_media_home_grid_metrics(main_page_obj, COLS, ROWS, first_card);
 
   for (int pos = 0; pos < NS; pos++) {
-    int idx = parsed.positions[pos];
+    int idx = order.positions[pos];
     if (idx < 1 || idx > NS) continue;
     auto &s = slots[idx - 1];
     std::string scfg = s.config->state;
 
     ParsedCfg p = parse_cfg(scfg);
-    int row_span = parsed.row_span[idx - 1] > 0 ? parsed.row_span[idx - 1] : 1;
-    int col_span = parsed.col_span[idx - 1] > 0 ? parsed.col_span[idx - 1] : 1;
+    int row_span = order.row_span[idx - 1] > 0 ? order.row_span[idx - 1] : 1;
+    int col_span = order.col_span[idx - 1] > 0 ? order.col_span[idx - 1] : 1;
     bool is_1x1_card = row_span == 1 && col_span == 1;
     if (p.type == "push") {
       register_ha_control_availability(s.btn, s.btn);

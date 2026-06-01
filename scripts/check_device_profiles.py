@@ -268,6 +268,22 @@ def test_weather_card_mode_visibility_reset() -> None:
     )
 
 
+def test_grid_phase2_uses_cleaned_spanned_layout() -> None:
+    grid = (ROOT / "components" / "espcontrol" / "button_grid_grid.h").read_text(encoding="utf-8")
+    match = re.search(
+        r"inline void grid_phase2\([\s\S]*?ESP_LOGI\(\"sensors\", \"Phase 2: done",
+        grid,
+    )
+    assert match, "shared grid phase 2 is missing"
+    body = match.group(0)
+    assert "OrderResult parsed, order;" in body and "clear_spanned_cells(parsed, NS, COLS, order);" in body, (
+        "phase 2 must bind weather/card state using the same cleaned spanned layout as the preview"
+    )
+    assert "int idx = order.positions[pos];" in body, (
+        "phase 2 must skip grid cells covered by larger cards"
+    )
+
+
 def test_temperature_unit_changes_refresh_weather_cards() -> None:
     config = (ROOT / "components" / "espcontrol" / "button_grid_config.h").read_text(encoding="utf-8")
     match = re.search(
@@ -335,6 +351,7 @@ def main() -> int:
     test_trmnl_epaper_icon_literals()
     test_weather_card_visual_matches_preview()
     test_weather_card_mode_visibility_reset()
+    test_grid_phase2_uses_cleaned_spanned_layout()
     test_temperature_unit_changes_refresh_weather_cards()
     test_current_weather_state_updates_availability()
     test_trmnl_weather_forecast_queue_drains()
