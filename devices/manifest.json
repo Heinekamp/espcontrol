@@ -228,7 +228,7 @@
           "climateCardIcon": "font_mdi_47_icons",
           "subpageChevron": "font_mdi_27_subpage",
           "climateOptionTitle": "font_roboto_regular_24_text",
-          "climateOptionValue": "font_roboto_regular_31_text"
+          "climateOptionValue": "font_roboto_regular_24_text"
         },
         "display": {
           "wrapTallLabels": false,
@@ -357,7 +357,7 @@
           "climateCardIcon": "font_mdi_42_icons",
           "subpageChevron": "font_mdi_21_network",
           "climateOptionTitle": "font_roboto_regular_20_text",
-          "climateOptionValue": "font_roboto_regular_24_text"
+          "climateOptionValue": "font_roboto_regular_20_text"
         },
         "display": {
           "wrapTallLabels": true,
@@ -485,7 +485,7 @@
           "climateCardIcon": "font_mdi_50_icons",
           "subpageChevron": "font_mdi_26_network",
           "climateOptionTitle": "font_roboto_regular_24_text",
-          "climateOptionValue": "font_roboto_regular_31_text"
+          "climateOptionValue": "font_roboto_regular_24_text"
         },
         "display": {
           "colorCorrection": {
