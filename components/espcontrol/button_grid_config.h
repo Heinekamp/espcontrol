@@ -1412,7 +1412,7 @@ inline bool parse_weather_forecast_payload(const std::string &payload,
 
 inline std::string weather_forecast_response_template(const std::string &entity_id) {
   return std::string("{% set entity = '") + entity_id + "' %}"
-    "{% set entity_response = response[entity] if entity in response else none %}"
+    "{% set entity_response = response if response is not none and 'forecast' in response else (response[entity] if entity in response else none) %}"
     "{% set forecasts = entity_response['forecast'] if entity_response is not none and 'forecast' in entity_response else [] %}"
     "{% set today = forecasts[0] if forecasts|length > 0 else none %}"
     "{% set tomorrow = forecasts[1] if forecasts|length > 1 else none %}"
@@ -1421,7 +1421,7 @@ inline std::string weather_forecast_response_template(const std::string &entity_
     "{% set tomorrow_high = tomorrow['temperature'] if tomorrow is not none and 'temperature' in tomorrow else (tomorrow['temperature_high'] if tomorrow is not none and 'temperature_high' in tomorrow else (tomorrow['high_temperature'] if tomorrow is not none and 'high_temperature' in tomorrow else (tomorrow['high'] if tomorrow is not none and 'high' in tomorrow else ''))) %}"
     "{% set tomorrow_low = tomorrow['templow'] if tomorrow is not none and 'templow' in tomorrow else (tomorrow['temperature_low'] if tomorrow is not none and 'temperature_low' in tomorrow else (tomorrow['low_temperature'] if tomorrow is not none and 'low_temperature' in tomorrow else (tomorrow['low'] if tomorrow is not none and 'low' in tomorrow else ''))) %}"
     "{{ today_high }}|{{ today_low }}|{{ tomorrow_high }}|{{ tomorrow_low }}|"
-    "{{ state_attr(entity, 'temperature_unit') or '' }}";
+    "{{ entity_response['temperature_unit'] if entity_response is not none and 'temperature_unit' in entity_response else (state_attr(entity, 'temperature_unit') or '') }}";
 }
 
 inline uint32_t next_weather_forecast_call_id() {
