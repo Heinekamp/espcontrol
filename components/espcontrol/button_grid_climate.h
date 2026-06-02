@@ -120,8 +120,7 @@ struct ClimateControlModalUi {
   lv_obj_t *unit_lbl = nullptr;
   lv_obj_t *status_lbl = nullptr;
   lv_obj_t *hint_lbl = nullptr;
-  lv_obj_t *low_chip = nullptr;
-  lv_obj_t *high_chip = nullptr;
+  lv_obj_t *target_chip = nullptr;
   lv_obj_t *minus_btn = nullptr;
   lv_obj_t *plus_btn = nullptr;
   lv_obj_t *chips = nullptr;
@@ -858,44 +857,14 @@ inline void climate_update_option_chip(lv_obj_t *chip, const char *title,
   }
 }
 
-inline std::string climate_target_chip_value(ClimateControlCtx *ctx, bool high) {
+inline std::string climate_target_chip_value(ClimateControlCtx *ctx) {
   if (!ctx) return "";
-  int target = high ? ctx->high_tenths : ctx->low_tenths;
-  return climate_format_tenths(target, ctx->precision) + display_temperature_unit_symbol();
+  return ctx->edit_high ? "High" : "Low";
 }
 
 inline void climate_update_target_chip(lv_obj_t *chip, ClimateControlCtx *ctx,
-                                       bool high, bool visible) {
-  climate_update_option_chip(chip, high ? "High" : "Low",
-    climate_target_chip_value(ctx, high), visible);
-  if (!chip || !visible || !ctx) return;
-
-  bool selected = high ? ctx->edit_high : !ctx->edit_high;
-  lv_obj_set_style_bg_color(chip,
-    lv_color_hex(selected ? ctx->accent_color : DARK_BACKGROUND_SECONDARY),
-    LV_PART_MAIN);
-
-  lv_obj_t *icon_lbl = lv_obj_get_child(chip, 0);
-  if (icon_lbl) {
-    lv_obj_set_style_text_color(icon_lbl,
-      lv_color_hex(selected ? DARK_TEXT_PRIMARY : DARK_TEXT_SOFT),
-      LV_PART_MAIN);
-  }
-
-  lv_obj_t *text_col = lv_obj_get_child(chip, 1);
-  if (!text_col) return;
-  lv_obj_t *title_lbl = lv_obj_get_child(text_col, 0);
-  lv_obj_t *value_lbl = lv_obj_get_child(text_col, 1);
-  if (title_lbl) {
-    lv_obj_set_style_text_color(title_lbl,
-      lv_color_hex(selected ? DARK_TEXT_PRIMARY : DARK_TEXT_MUTED),
-      LV_PART_MAIN);
-  }
-  if (value_lbl) {
-    lv_obj_set_style_text_color(value_lbl,
-      lv_color_hex(selected ? DARK_TEXT_PRIMARY : DARK_TEXT_SOFT),
-      LV_PART_MAIN);
-  }
+                                       bool visible) {
+  climate_update_option_chip(chip, "Target", climate_target_chip_value(ctx), visible);
 }
 
 inline void climate_send_option(ClimateControlCtx *ctx, const std::string &kind, const std::string &value) {
@@ -913,6 +882,8 @@ inline void climate_send_option(ClimateControlCtx *ctx, const std::string &kind,
   } else if (kind == "preset") {
     ctx->preset_mode = value;
     climate_send_action(ctx->entity_id, "climate.set_preset_mode", {{"preset_mode", value}});
+  } else if (kind == "target") {
+    ctx->edit_high = climate_lower(climate_trim(value)) == "high";
   }
   climate_update_card(ctx);
   climate_control_set_modal_value(ctx);
@@ -924,6 +895,7 @@ inline std::string climate_option_current_value(ClimateControlCtx *ctx, const st
   if (kind == "fan") return ctx->fan_mode;
   if (kind == "swing") return ctx->swing_mode;
   if (kind == "preset") return ctx->preset_mode;
+  if (kind == "target") return ctx->edit_high ? "high" : "low";
   return "";
 }
 
@@ -1031,8 +1003,7 @@ inline void climate_set_dial_controls_visible(bool visible) {
   climate_set_obj_visible(ui.target_row, visible);
   climate_set_obj_visible(ui.status_lbl, visible);
   climate_set_obj_visible(ui.hint_lbl, visible);
-  climate_set_obj_visible(ui.low_chip, visible);
-  climate_set_obj_visible(ui.high_chip, visible);
+  climate_set_obj_visible(ui.target_chip, visible);
   climate_set_obj_visible(ui.minus_btn, visible);
   climate_set_obj_visible(ui.plus_btn, visible);
   climate_set_obj_visible(ui.chips, visible);
@@ -1196,10 +1167,15 @@ inline void climate_open_option_menu(ClimateControlCtx *ctx, const std::string &
     return;
   }
   const std::vector<std::string> *options = nullptr;
+  std::vector<std::string> target_options;
   if (kind == "hvac") options = &ctx->hvac_modes;
   else if (kind == "fan") options = &ctx->fan_modes;
   else if (kind == "swing") options = &ctx->swing_modes;
   else if (kind == "preset") options = &ctx->preset_modes;
+  else if (kind == "target") {
+    target_options = {"low", "high"};
+    options = &target_options;
+  }
   if (!options || options->empty()) return;
 
   ui.option_click_count = 0;
@@ -1293,8 +1269,7 @@ inline void climate_control_set_modal_value(ClimateControlCtx *ctx) {
     if (dual) lv_obj_clear_flag(ui.hint_lbl, LV_OBJ_FLAG_HIDDEN);
     else lv_obj_add_flag(ui.hint_lbl, LV_OBJ_FLAG_HIDDEN);
   }
-  climate_update_target_chip(ui.low_chip, ctx, false, dual);
-  climate_update_target_chip(ui.high_chip, ctx, true, dual);
+  climate_update_target_chip(ui.target_chip, ctx, dual);
   climate_set_obj_visible(ui.minus_btn, true);
   climate_set_obj_visible(ui.plus_btn, true);
   climate_set_step_button_enabled(ui.minus_btn, temp_enabled);
@@ -1389,14 +1364,13 @@ inline void climate_control_layout_modal(ClimateControlCtx *ctx) {
     lv_obj_set_style_radius(chip, chip_h / 2, LV_PART_MAIN);
     climate_apply_bottom_chip_padding(chip, layout);
   };
-  layout_option_chip(ui.low_chip);
-  layout_option_chip(ui.high_chip);
+  layout_option_chip(ui.target_chip);
   layout_option_chip(ui.mode_chip);
   layout_option_chip(ui.preset_chip);
   layout_option_chip(ui.fan_chip);
   layout_option_chip(ui.swing_chip);
   uint8_t visible_chip_count = 0;
-  if (climate_modal_temperature_controls_enabled(ctx) && climate_dual_target(ctx)) visible_chip_count += 2;
+  if (climate_modal_temperature_controls_enabled(ctx) && climate_dual_target(ctx)) visible_chip_count++;
   if (ctx->available && !ctx->hvac_modes.empty()) visible_chip_count++;
   if (ctx->available && !ctx->preset_modes.empty()) visible_chip_count++;
   if (ctx->available && !ctx->fan_modes.empty()) visible_chip_count++;
@@ -1690,10 +1664,7 @@ inline void climate_control_open_modal(ClimateControlCtx *ctx) {
   lv_obj_set_scrollbar_mode(ui.chips, LV_SCROLLBAR_MODE_OFF);
 
   const lv_font_t *chip_icon_font = ctx->card_icon_font ? ctx->card_icon_font : ctx->icon_font;
-  ui.low_chip = climate_create_option_chip(ui.chips, find_icon("Thermometer Low"), "Low",
-    chip_icon_font, ctx->option_title_font, ctx->option_value_font,
-    ctx->width_compensation_percent);
-  ui.high_chip = climate_create_option_chip(ui.chips, find_icon("Thermometer High"), "High",
+  ui.target_chip = climate_create_option_chip(ui.chips, find_icon("Thermometer"), "Target",
     chip_icon_font, ctx->option_title_font, ctx->option_value_font,
     ctx->width_compensation_percent);
   ui.mode_chip = climate_create_option_chip(ui.chips, find_icon("Fire"), "Mode",
@@ -1708,13 +1679,9 @@ inline void climate_control_open_modal(ClimateControlCtx *ctx) {
   ui.swing_chip = climate_create_option_chip(ui.chips, find_icon("Swap Horizontal"), "Swing",
     chip_icon_font, ctx->option_title_font, ctx->option_value_font,
     ctx->width_compensation_percent);
-  lv_obj_add_event_cb(ui.low_chip, [](lv_event_t *) {
+  lv_obj_add_event_cb(ui.target_chip, [](lv_event_t *) {
     ClimateControlModalUi &ui = climate_control_modal_ui();
-    if (ui.active) { ui.active->edit_high = false; climate_control_set_modal_value(ui.active); }
-  }, LV_EVENT_CLICKED, nullptr);
-  lv_obj_add_event_cb(ui.high_chip, [](lv_event_t *) {
-    ClimateControlModalUi &ui = climate_control_modal_ui();
-    if (ui.active) { ui.active->edit_high = true; climate_control_set_modal_value(ui.active); }
+    if (ui.active) climate_open_option_menu(ui.active, "target");
   }, LV_EVENT_CLICKED, nullptr);
   lv_obj_add_event_cb(ui.mode_chip, [](lv_event_t *) {
     ClimateControlModalUi &ui = climate_control_modal_ui();
