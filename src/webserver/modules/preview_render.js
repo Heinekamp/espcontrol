@@ -99,7 +99,8 @@ function renderPreview() {
       backBtn.innerHTML =
         '<span class="sp-btn-icon sp-back-hit mdi mdi-chevron-left"></span>' +
         '<span class="sp-btn-label">' + escHtml(backLabel) + '</span>';
-      backBtn.style.backgroundColor = "#" + (state.offColor.length === 6 ? state.offColor : "CECECE");
+      var backColor = isEpaperPreview() ? epaperPreviewFillColor() : state.offColor;
+      backBtn.style.backgroundColor = "#" + (backColor.length === 6 ? backColor : "CECECE");
       backBtn.style.cursor = "pointer";
       backBtn.setAttribute("data-pos", pos);
       backBtn.draggable = !isConfigLocked();
@@ -116,7 +117,8 @@ function renderPreview() {
       }
       var iconName = resolveIcon(b);
       var label = b.label || b.entity || "Configure";
-      var color = (b.type === "sensor" || b.type === "door_window" || b.type === "presence" || b.type === "weather" || b.type === "weather_forecast" || b.type === "calendar" || b.type === "clock" || b.type === "timezone")
+      var color = isEpaperPreview() ? epaperPreviewFillColor() :
+        (b.type === "sensor" || b.type === "door_window" || b.type === "presence" || b.type === "weather" || b.type === "weather_forecast" || b.type === "calendar" || b.type === "clock" || b.type === "timezone")
         ? state.sensorColor : state.offColor;
       var previewTypeDef = BUTTON_TYPES[b.type || ""] || null;
       if (previewTypeDef && c.isSub && !buttonTypeRegistryValue(previewTypeDef, "allowInSubpage", false)) {

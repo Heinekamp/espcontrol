@@ -14,6 +14,14 @@ function defaultTheme() {
   return "Dark";
 }
 
+function isEpaperPreview() {
+  return CFG && CFG.previewTheme === "epaper";
+}
+
+function epaperPreviewFillColor() {
+  return normalizeTheme(state.theme) === "Light" ? "FFFFFF" : "000000";
+}
+
 function defaultTimezoneOptions() {
   return (CFG && Array.isArray(CFG.timezoneOptions)) ? CFG.timezoneOptions.slice() : [];
 }
@@ -546,9 +554,11 @@ function applyThemePreset(theme, postChanges) {
   renderPreview();
   if (postChanges) {
     postSelect(entityName("screen_theme"), state.theme);
-    postText(entityName("button_on_color"), state.onColor);
-    postText(entityName("button_off_color"), state.offColor);
-    postText(entityName("sensor_card_color"), state.sensorColor);
+    if (!isEpaperPreview()) {
+      postText(entityName("button_on_color"), state.onColor);
+      postText(entityName("button_off_color"), state.offColor);
+      postText(entityName("sensor_card_color"), state.sensorColor);
+    }
   }
 }
 

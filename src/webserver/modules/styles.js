@@ -138,6 +138,7 @@ var CSS =
   "#sp-app[data-screen-theme='dark'] .sp-add-icon{color:rgba(255,255,255,.82)}" +
   "#sp-app[data-preview-theme='epaper'] .sp-screen{box-shadow:none;border:1px solid #111;border-radius:.8cqw}" +
   "#sp-app[data-preview-theme='epaper'] .sp-btn{border:1px solid #000;box-shadow:none;filter:none}" +
+  "#sp-app[data-preview-theme='epaper'][data-screen-theme='dark'] .sp-btn{border-color:#fff}" +
   "#sp-app[data-preview-theme='epaper'] .sp-btn:hover{filter:none}" +
   "#sp-app[data-preview-theme='epaper'] .sp-btn.sp-selected{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}" +
   "#sp-app[data-preview-theme='epaper'] .sp-empty-cell{border:1px solid rgba(0,0,0,.85);border-radius:var(--empty-r);background:transparent}" +
