@@ -34,6 +34,10 @@ constexpr lv_coord_t CLIMATE_MODAL_WIDE_LANDSCAPE_OPTION_CHIP_BOTTOM_PX = 4;
 constexpr lv_coord_t CLIMATE_MODAL_OPTION_CHIP_MIN_H_PX = 56;
 constexpr lv_coord_t CLIMATE_MODAL_OPTION_CHIP_PAD_Y_REF_PX = 6;
 constexpr lv_coord_t CLIMATE_MODAL_OPTION_CHIP_TEXT_GAP_PX = 2;
+constexpr lv_coord_t CLIMATE_MODAL_COMPACT_PORTRAIT_OPTION_CHIP_W_PX = 200;
+constexpr lv_coord_t CLIMATE_MODAL_COMPACT_PORTRAIT_OPTION_CHIP_GAP_PX = 12;
+constexpr lv_coord_t CLIMATE_MODAL_COMPACT_PORTRAIT_OPTION_CHIP_PAD_X_PX = 16;
+constexpr lv_coord_t CLIMATE_MODAL_COMPACT_PORTRAIT_OPTION_CHIP_ICON_GAP_PX = 14;
 constexpr lv_coord_t CLIMATE_MODAL_STEP_BUTTON_GAP_REF_PX = 16;
 constexpr uint16_t CLIMATE_MODAL_STEP_ICON_ZOOM = 214;
 constexpr int CLIMATE_OPTION_ROW_WIDTH_PERCENT = 88;
@@ -481,6 +485,10 @@ inline bool climate_control_uses_large_landscape_modal_tuning(const ControlModal
   return control_modal_uses_large_landscape_tuning(layout);
 }
 
+inline bool climate_control_uses_compact_portrait_modal_tuning(const ControlModalLayout &layout) {
+  return control_modal_uses_compact_portrait_tuning(layout) && layout.sh > layout.sw;
+}
+
 inline lv_coord_t climate_control_step_buttons_up_ref(const ControlModalLayout &layout) {
   if (climate_control_uses_large_landscape_modal_tuning(layout))
     return CLIMATE_MODAL_LARGE_LANDSCAPE_STEP_BUTTONS_UP_REF_PX;
@@ -541,8 +549,18 @@ inline void climate_apply_bottom_chip_padding(lv_obj_t *chip,
                                               const ControlModalLayout &layout) {
   if (!chip) return;
   lv_coord_t pad_y = climate_option_chip_pad_y(layout);
+  bool compact_portrait = climate_control_uses_compact_portrait_modal_tuning(layout);
   lv_obj_set_style_pad_top(chip, pad_y, LV_PART_MAIN);
   lv_obj_set_style_pad_bottom(chip, pad_y, LV_PART_MAIN);
+  lv_obj_set_style_pad_left(chip,
+    compact_portrait ? CLIMATE_MODAL_COMPACT_PORTRAIT_OPTION_CHIP_PAD_X_PX : 26,
+    LV_PART_MAIN);
+  lv_obj_set_style_pad_right(chip,
+    compact_portrait ? CLIMATE_MODAL_COMPACT_PORTRAIT_OPTION_CHIP_PAD_X_PX : 22,
+    LV_PART_MAIN);
+  lv_obj_set_style_pad_column(chip,
+    compact_portrait ? CLIMATE_MODAL_COMPACT_PORTRAIT_OPTION_CHIP_ICON_GAP_PX : 24,
+    LV_PART_MAIN);
   lv_obj_t *icon_lbl = lv_obj_get_child(chip, 0);
   lv_obj_t *text_col = lv_obj_get_child(chip, 1);
   if (icon_lbl) lv_obj_set_style_translate_y(icon_lbl, 0, LV_PART_MAIN);
@@ -968,7 +986,8 @@ inline lv_obj_t *climate_create_option_chip(lv_obj_t *parent, const char *icon,
 
   lv_obj_t *text_col = lv_obj_create(btn);
   lv_obj_add_flag(text_col, LV_OBJ_FLAG_SCROLL_CHAIN_HOR);
-  lv_obj_set_size(text_col, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+  lv_obj_set_size(text_col, 0, LV_SIZE_CONTENT);
+  lv_obj_set_flex_grow(text_col, 1);
   lv_obj_set_style_bg_opa(text_col, LV_OPA_TRANSP, LV_PART_MAIN);
   lv_obj_set_style_border_width(text_col, 0, LV_PART_MAIN);
   lv_obj_set_style_pad_all(text_col, 0, LV_PART_MAIN);
@@ -982,6 +1001,7 @@ inline lv_obj_t *climate_create_option_chip(lv_obj_t *parent, const char *icon,
 
   lv_obj_t *title_lbl = lv_label_create(text_col);
   lv_obj_add_flag(title_lbl, LV_OBJ_FLAG_SCROLL_CHAIN_HOR);
+  lv_obj_set_width(title_lbl, lv_pct(100));
   lv_label_set_text(title_lbl, espcontrol_i18n(title));
   lv_label_set_long_mode(title_lbl, LV_LABEL_LONG_CLIP);
   lv_obj_set_style_text_color(title_lbl, lv_color_hex(DARK_TEXT_MUTED), LV_PART_MAIN);
@@ -990,6 +1010,7 @@ inline lv_obj_t *climate_create_option_chip(lv_obj_t *parent, const char *icon,
 
   lv_obj_t *value_lbl = lv_label_create(text_col);
   lv_obj_add_flag(value_lbl, LV_OBJ_FLAG_SCROLL_CHAIN_HOR);
+  lv_obj_set_width(value_lbl, lv_pct(100));
   lv_label_set_text(value_lbl, espcontrol_i18n("None"));
   lv_label_set_long_mode(value_lbl, LV_LABEL_LONG_CLIP);
   lv_obj_set_style_text_color(value_lbl, lv_color_hex(DARK_TEXT_SOFT), LV_PART_MAIN);
@@ -1324,12 +1345,15 @@ inline void climate_control_layout_modal(ClimateControlCtx *ctx) {
   lv_coord_t title_center_y = value_center_y -
     (value_h / 2 + layout.title_gap + title_h / 2);
   bool tune_4848 = climate_control_uses_4848_modal_tuning(layout);
+  bool compact_portrait = climate_control_uses_compact_portrait_modal_tuning(layout);
   bool roomy_landscape = layout.panel_w >= 900 && layout.panel_h <= 600;
   bool medium_landscape = layout.panel_w >= 760 && layout.panel_h <= 520;
   lv_coord_t chip_h = climate_option_chip_height(ctx, layout);
-  lv_coord_t chip_gap = control_modal_scaled_px(tune_4848 ? CLIMATE_MODAL_4848_OPTION_CHIP_GAP_REF_PX : 24,
-    layout.short_side);
-  if (chip_gap < (tune_4848 ? 10 : 16)) chip_gap = tune_4848 ? 10 : 16;
+  lv_coord_t chip_gap = compact_portrait
+    ? CLIMATE_MODAL_COMPACT_PORTRAIT_OPTION_CHIP_GAP_PX
+    : control_modal_scaled_px(tune_4848 ? CLIMATE_MODAL_4848_OPTION_CHIP_GAP_REF_PX : 24,
+        layout.short_side);
+  if (!compact_portrait && chip_gap < (tune_4848 ? 10 : 16)) chip_gap = tune_4848 ? 10 : 16;
 
   control_modal_apply_panel_layout(ui.overlay, ui.panel, layout,
     control_modal_card_radius(ctx->btn));
@@ -1367,10 +1391,22 @@ inline void climate_control_layout_modal(ClimateControlCtx *ctx) {
   lv_obj_add_flag(ui.chips, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_set_scroll_dir(ui.chips, LV_DIR_HOR);
   lv_obj_set_scrollbar_mode(ui.chips, LV_SCROLLBAR_MODE_OFF);
+  uint8_t visible_chip_count = 0;
+  if (climate_modal_temperature_controls_enabled(ctx) && climate_dual_target(ctx)) visible_chip_count++;
+  if (ctx->available && !ctx->hvac_modes.empty()) visible_chip_count++;
+  if (ctx->available && !ctx->preset_modes.empty()) visible_chip_count++;
+  if (ctx->available && !ctx->fan_modes.empty()) visible_chip_count++;
+  if (ctx->available && !ctx->swing_modes.empty()) visible_chip_count++;
+  lv_coord_t chip_row_w = layout.panel_w * CLIMATE_OPTION_ROW_WIDTH_PERCENT / 100;
   lv_coord_t option_chip_w = compensated_width(
     tune_4848 ? CLIMATE_MODAL_4848_OPTION_CHIP_W_REF_PX :
-      layout.short_side < 520 ? (roomy_landscape ? 224 : (medium_landscape ? 240 : 180)) : 240,
+      (compact_portrait ? CLIMATE_MODAL_COMPACT_PORTRAIT_OPTION_CHIP_W_PX :
+        (layout.short_side < 520 ? (roomy_landscape ? 224 : (medium_landscape ? 240 : 180)) : 240)),
     ctx->width_compensation_percent);
+  if (compact_portrait && visible_chip_count == 2) {
+    lv_coord_t fitted_w = (chip_row_w - chip_gap) / 2;
+    if (fitted_w > option_chip_w) option_chip_w = fitted_w;
+  }
   auto layout_option_chip = [&](lv_obj_t *chip) {
     if (!chip) return;
     lv_obj_set_size(chip, option_chip_w, chip_h);
@@ -1382,13 +1418,6 @@ inline void climate_control_layout_modal(ClimateControlCtx *ctx) {
   layout_option_chip(ui.preset_chip);
   layout_option_chip(ui.fan_chip);
   layout_option_chip(ui.swing_chip);
-  uint8_t visible_chip_count = 0;
-  if (climate_modal_temperature_controls_enabled(ctx) && climate_dual_target(ctx)) visible_chip_count++;
-  if (ctx->available && !ctx->hvac_modes.empty()) visible_chip_count++;
-  if (ctx->available && !ctx->preset_modes.empty()) visible_chip_count++;
-  if (ctx->available && !ctx->fan_modes.empty()) visible_chip_count++;
-  if (ctx->available && !ctx->swing_modes.empty()) visible_chip_count++;
-  lv_coord_t chip_row_w = layout.panel_w * CLIMATE_OPTION_ROW_WIDTH_PERCENT / 100;
   lv_coord_t chip_content_w = visible_chip_count == 0 ? 0 :
     visible_chip_count * option_chip_w + (visible_chip_count - 1) * chip_gap;
   if (chip_content_w > chip_row_w) {
