@@ -512,7 +512,12 @@ text:
               id(clock_bar_temperature_entities).state,
               temperature_labels,
               6,
-              id(main_page)->obj);
+              id(main_page)->obj,
+              []() {
+                return id(clock_bar_enabled).state &&
+                       !id(is_clock_showing) &&
+                       !id(cover_art_screensaver_active);
+              });
         - script.execute: clock_bar_apply
 
   - platform: template

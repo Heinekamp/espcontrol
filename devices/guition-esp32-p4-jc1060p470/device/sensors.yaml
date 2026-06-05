@@ -343,6 +343,11 @@ esphome:
               id(media_player_sleep_prevention_entity).state,
               &id(media_player_playing),
               []() {
+                return id(clock_bar_enabled).state &&
+                       !id(is_clock_showing) &&
+                       !id(cover_art_screensaver_active);
+              },
+              []() {
                 id(screensaver_presence_wake).execute();
               },
               []() {
