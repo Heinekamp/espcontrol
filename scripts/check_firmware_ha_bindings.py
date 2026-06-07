@@ -15,6 +15,7 @@ FIRMWARE_DIR = ROOT / "components" / "espcontrol"
 CORE_INFRA_PATH = ROOT / "common" / "device" / "core_infra.yaml"
 API_NAVIGATE_PATH = ROOT / "common" / "device" / "api_navigate.yaml"
 COVER_ART_PATH = ROOT / "common" / "device" / "screen_cover_art.yaml"
+BACKLIGHT_PATH = ROOT / "common" / "addon" / "backlight.yaml"
 TIME_ADDON_PATH = ROOT / "common" / "addon" / "time.yaml"
 SUN_CALC_PATH = ROOT / "components" / "espcontrol" / "sun_calc.h"
 S3_DEVICE_PATH = ROOT / "devices" / "guition-esp32-s3-4848s040" / "device" / "device.yaml"
@@ -79,6 +80,12 @@ COVER_COMMAND_REQUEST_PATTERN = re.compile(
     r"inline\s+void\s+send_cover_command_action\s*\([^)]*\)\s*\{(?P<body>.*?)\n\}",
     re.DOTALL,
 )
+YAML_SCRIPT_PATTERN_TEMPLATE = r"(?ms)^  - id: {script_id}\n(?P<body>.*?)(?=^  - id: |\Z)"
+
+
+def yaml_script_body(text: str, script_id: str) -> str | None:
+    match = re.search(YAML_SCRIPT_PATTERN_TEMPLATE.format(script_id=re.escape(script_id)), text)
+    return match.group("body") if match else None
 
 
 def firmware_ha_binding_errors(firmware_dir: Path, root: Path) -> list[str]:
@@ -602,6 +609,53 @@ def firmware_cover_art_stale_image_errors(path: Path, root: Path) -> list[str]:
     return errors
 
 
+def firmware_screensaver_wake_guard_errors(backlight_path: Path, cover_art_path: Path, root: Path) -> list[str]:
+    errors: list[str] = []
+    if backlight_path.exists():
+        rel = backlight_path.relative_to(root)
+        text = backlight_path.read_text(encoding="utf-8")
+        body = yaml_script_body(text, "screensaver_wake")
+        if body is None:
+            errors.append(f"{rel}: missing screensaver_wake script")
+        else:
+            marker = "lambda: 'return id(display_asleep) ||"
+            if marker not in body:
+                errors.append(f"{rel}: keep the normal screensaver wake branch explicit")
+            else:
+                normal_wake_body = body.split(marker, 1)[1]
+                if re.search(
+                    r"id:\s*screensaver_wake_touch_guard_active\s*\n\s*value:\s*'true'",
+                    normal_wake_body,
+                ):
+                    errors.append(f"{rel}: do not block the first button tap after normal screensaver wake")
+                if "script.execute: screensaver_wake_touch_guard_clear" in normal_wake_body:
+                    errors.append(f"{rel}: do not arm a delayed wake guard clear for normal screensaver wake")
+                if "id(screensaver_wake_touch_guard_skip_once) = false" not in normal_wake_body:
+                    errors.append(f"{rel}: consume stale cover art wake guard state during screensaver wake")
+                if not re.search(
+                    r"id:\s*screensaver_wake_touch_guard_active\s*\n\s*value:\s*'false'",
+                    normal_wake_body,
+                ):
+                    errors.append(f"{rel}: clear stale wake guard state during normal screensaver wake")
+
+    if cover_art_path.exists():
+        rel = cover_art_path.relative_to(root)
+        text = cover_art_path.read_text(encoding="utf-8")
+        body = yaml_script_body(text, "cover_art_wake_touch_block")
+        if body is None:
+            errors.append(f"{rel}: missing cover_art_wake_touch_block script")
+        else:
+            if not re.search(r"id:\s*screensaver_wake_touch_guard_active\s*\n\s*value:\s*'true'", body):
+                errors.append(f"{rel}: keep cover art wake taps guarded")
+            if "LV_INDEV_STATE_PRESSED" not in body:
+                errors.append(f"{rel}: keep cover art guard until the wake touch is released")
+            if not re.search(r"id:\s*screensaver_wake_touch_guard_active\s*\n\s*value:\s*'false'", body):
+                errors.append(f"{rel}: clear the cover art wake guard after touch release")
+            if "lvgl.widget.hide: cover_art_wake_touch_guard" not in body:
+                errors.append(f"{rel}: hide the cover art wake touch guard after release")
+    return errors
+
+
 def firmware_climate_step_errors(firmware_dir: Path, root: Path) -> list[str]:
     path = firmware_dir / "button_grid_climate.h"
     if not path.exists():
@@ -738,6 +792,7 @@ def run_scan() -> int:
     errors.extend(firmware_cover_request_errors(FIRMWARE_DIR, CORE_INFRA_PATH, ROOT))
     errors.extend(firmware_cover_art_external_input_errors(COVER_ART_PATH, ROOT))
     errors.extend(firmware_cover_art_stale_image_errors(COVER_ART_PATH, ROOT))
+    errors.extend(firmware_screensaver_wake_guard_errors(BACKLIGHT_PATH, COVER_ART_PATH, ROOT))
     errors.extend(firmware_climate_step_errors(FIRMWARE_DIR, ROOT))
     errors.extend(
         firmware_s3_api_errors(
@@ -1014,6 +1069,28 @@ def expect_cover_art_stale_image_errors(name: str, text: str, expected: tuple[st
         path.write_text(text, encoding="utf-8")
 
         errors = firmware_cover_art_stale_image_errors(path, root)
+        for item in expected:
+            assert any(item in error for error in errors), f"{name}: missing {item!r} in {errors!r}"
+        if not expected:
+            assert not errors, f"{name}: expected no errors, got {errors!r}"
+
+
+def expect_screensaver_wake_guard_errors(
+    name: str,
+    backlight_text: str,
+    cover_art_text: str,
+    expected: tuple[str, ...],
+) -> None:
+    with TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        backlight_path = root / "common" / "addon" / "backlight.yaml"
+        cover_art_path = root / "common" / "device" / "screen_cover_art.yaml"
+        backlight_path.parent.mkdir(parents=True)
+        cover_art_path.parent.mkdir(parents=True)
+        backlight_path.write_text(backlight_text, encoding="utf-8")
+        cover_art_path.write_text(cover_art_text, encoding="utf-8")
+
+        errors = firmware_screensaver_wake_guard_errors(backlight_path, cover_art_path, root)
         for item in expected:
             assert any(item in error for error in errors), f"{name}: missing {item!r} in {errors!r}"
         if not expected:
@@ -1866,6 +1943,62 @@ def run_self_test() -> int:
         "    then:\n"
         "      - lvgl.widget.hide: cover_art_image_widget\n",
         ("do not show an unavailable cover art message",),
+    )
+    valid_cover_art_wake_guard = (
+        "script:\n"
+        "  - id: cover_art_wake_touch_block\n"
+        "    then:\n"
+        "      - globals.set:\n"
+        "          id: screensaver_wake_touch_guard_active\n"
+        "          value: 'true'\n"
+        "      - wait_until:\n"
+        "          condition:\n"
+        "            lambda: 'return lv_indev_get_state(indev) == LV_INDEV_STATE_PRESSED;'\n"
+        "      - globals.set:\n"
+        "          id: screensaver_wake_touch_guard_active\n"
+        "          value: 'false'\n"
+        "      - lvgl.widget.hide: cover_art_wake_touch_guard\n"
+    )
+    expect_screensaver_wake_guard_errors(
+        "normal wake arms delayed guard",
+        "script:\n"
+        "  - id: screensaver_wake\n"
+        "    then:\n"
+        "      - if:\n"
+        "          condition:\n"
+        "            lambda: 'return id(display_asleep) || id(screen_schedule_asleep);'\n"
+        "          then:\n"
+        "            - globals.set:\n"
+        "                id: screensaver_wake_touch_guard_active\n"
+        "                value: 'true'\n"
+        "            - script.execute: screensaver_wake_touch_guard_clear\n",
+        valid_cover_art_wake_guard,
+        (
+            "do not block the first button tap after normal screensaver wake",
+            "do not arm a delayed wake guard clear for normal screensaver wake",
+        ),
+    )
+    expect_screensaver_wake_guard_errors(
+        "normal wake clears stale guard while cover art remains guarded",
+        "script:\n"
+        "  - id: screensaver_wake\n"
+        "    then:\n"
+        "      - if:\n"
+        "          condition:\n"
+        "            lambda: 'return id(display_asleep) || id(screen_schedule_asleep);'\n"
+        "          then:\n"
+        "            - if:\n"
+        "                condition:\n"
+        "                  lambda: |-\n"
+        "                    bool keep_cover_art_guard = id(cover_art_screensaver_active) && id(screensaver_wake_touch_guard_skip_once);\n"
+        "                    id(screensaver_wake_touch_guard_skip_once) = false;\n"
+        "                    return keep_cover_art_guard;\n"
+        "                else:\n"
+        "                  - globals.set:\n"
+        "                      id: screensaver_wake_touch_guard_active\n"
+        "                      value: 'false'\n",
+        valid_cover_art_wake_guard,
+        (),
     )
     expect_climate_step_errors(
         "climate ignores whole-number display step",

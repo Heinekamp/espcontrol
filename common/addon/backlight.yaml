@@ -495,14 +495,13 @@ script:
             - if:
                 condition:
                   lambda: |-
-                    if (!id(screensaver_wake_touch_guard_skip_once)) return true;
+                    bool keep_cover_art_guard =
+                        id(cover_art_screensaver_active) &&
+                        id(screensaver_wake_touch_guard_skip_once);
                     id(screensaver_wake_touch_guard_skip_once) = false;
-                    return false;
+                    return keep_cover_art_guard;
                 then:
-                  - globals.set:
-                      id: screensaver_wake_touch_guard_active
-                      value: 'true'
-                  - script.execute: screensaver_wake_touch_guard_clear
+                  - lambda: 'ESP_LOGD("screensaver", "Keeping cover art wake guard until touch release");'
                 else:
                   - script.stop: screensaver_wake_touch_guard_clear
                   - globals.set:
