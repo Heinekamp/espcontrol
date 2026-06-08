@@ -91,14 +91,13 @@ registerButtonType("image", {
     helpers.renderCardEntityField(panel, b, helpers, IMAGE_CARD_METADATA);
     renderImageRefreshSettings(panel, b, helpers);
   },
-  renderPreview: function () {
+  renderPreview: function (b, helpers) {
+    var tertiaryColor = (typeof state !== "undefined" && state.sensorColor) ? state.sensorColor : "212121";
     return {
       buttonClass: "sp-image-card",
       iconHtml:
-        '<span class="sp-image-preview">' +
-        '<span class="sp-image-preview-sky"></span>' +
-        '<span class="sp-image-preview-ground"></span>' +
-        '<span class="sp-image-preview-shape"></span>' +
+        '<span class="sp-image-preview" style="background:#' + helpers.escHtml(tertiaryColor) + '">' +
+        '<span class="sp-image-preview-icon mdi mdi-image"></span>' +
         '</span>',
       labelHtml: "",
     };
