@@ -7,6 +7,7 @@
 
 constexpr uint32_t IMAGE_CARD_STARTUP_RETRY_MS = 45000;
 constexpr uint32_t IMAGE_CARD_RETRY_INTERVAL_MS = 2000;
+constexpr uint32_t IMAGE_CARD_MODAL_REFRESH_DELAY_MS = 1000;
 constexpr uint8_t IMAGE_CARD_STARTUP_DOWNLOAD_RETRIES = 10;
 constexpr int IMAGE_CARD_MODAL_MAX_TARGET_SIDE_PX = 800;
 constexpr const char *IMAGE_CARD_LOADING_ICON = "\U000F02E9";
@@ -491,10 +492,66 @@ inline std::string image_card_cache_bust_url(const std::string &url) {
   return next;
 }
 
+inline bool image_card_query_has_param(const std::string &url, const std::string &param) {
+  size_t query = url.find('?');
+  if (query == std::string::npos) return false;
+  std::string token = param + "=";
+  size_t pos = url.find(token, query + 1);
+  while (pos != std::string::npos) {
+    if ((pos == query + 1 || url[pos - 1] == '&') &&
+        (url.find('#') == std::string::npos || pos < url.find('#'))) {
+      return true;
+    }
+    pos = url.find(token, pos + 1);
+  }
+  return false;
+}
+
+inline std::string image_card_append_query_param(const std::string &url,
+                                                const std::string &param,
+                                                int value) {
+  if (image_card_query_has_param(url, param)) return url;
+  std::string next = url;
+  std::string fragment;
+  size_t fragment_pos = next.find('#');
+  if (fragment_pos != std::string::npos) {
+    fragment = next.substr(fragment_pos);
+    next.erase(fragment_pos);
+  }
+  next += (next.find('?') == std::string::npos) ? "?" : "&";
+  next += param;
+  next += "=";
+  next += std::to_string(value);
+  next += fragment;
+  return next;
+}
+
+inline bool image_card_home_assistant_proxy_url(const std::string &url) {
+  return url.find("/api/camera_proxy/") != std::string::npos ||
+         url.find("/api/image_proxy/") != std::string::npos;
+}
+
+inline std::string image_card_sized_url(const std::string &url,
+                                        lv_coord_t width,
+                                        lv_coord_t height) {
+  if (!image_card_home_assistant_proxy_url(url) || width <= 0 || height <= 0) {
+    return url;
+  }
+  std::string next = image_card_append_query_param(url, "width", static_cast<int>(width));
+  return image_card_append_query_param(next, "height", static_cast<int>(height));
+}
+
 inline void image_card_handle_picture(ImageCardCtx *ctx, esphome::StringRef picture);
 
 inline void image_card_request_picture(ImageCardCtx *ctx) {
   if (!ctx || !ctx->active || ctx->entity_id.empty()) return;
+  if (!ha_api_state_connected()) {
+    if (image_card_startup_retry_active(ctx)) {
+      ctx->next_picture_retry_ms = esphome::millis() + IMAGE_CARD_RETRY_INTERVAL_MS;
+      image_card_set_loading_state(ctx, "Loading", true);
+    }
+    return;
+  }
   bool requested = ha_get_attribute(
     ctx->entity_id,
     std::string("entity_picture"),
@@ -539,7 +596,7 @@ inline void image_card_request_source_url(ImageCardCtx *ctx) {
     image_card_position_widget(ctx->btn, loading);
     image_card_refresh_loading_layout(loading);
   }
-  ctx->url = image_card_cache_bust_url(ctx->source_url);
+  ctx->url = image_card_cache_bust_url(image_card_sized_url(ctx->source_url, width, height));
   ctx->requested_once = true;
   ctx->next_download_retry_ms = 0;
   image_card_schedule_next_refresh(ctx, now);
@@ -549,6 +606,15 @@ inline void image_card_request_source_url(ImageCardCtx *ctx) {
   ctx->image->request_update_url(ctx->url);
 }
 
+inline void image_card_schedule_source_refresh(ImageCardCtx *ctx, uint32_t delay_ms,
+                                               const char *reason) {
+  if (!ctx || !ctx->active || ctx->source_url.empty()) return;
+  ctx->next_download_retry_ms = esphome::millis() + delay_ms;
+  ESP_LOGI("image_card", "Queued %s image refresh for %s in %lu ms",
+           reason ? reason : "camera", ctx->entity_id.c_str(),
+           static_cast<unsigned long>(delay_ms));
+}
+
 inline void image_card_hide_modal() {
   ImageCardModalUi &ui = image_card_modal_ui();
   ImageCardCtx *ctx = ui.active;
@@ -556,7 +622,7 @@ inline void image_card_hide_modal() {
   ui = ImageCardModalUi();
   if (ctx && ctx->active && ctx->image) {
     image_card_apply_widget_geometry(ctx->btn, ctx->widget, ctx->image);
-    if (!ctx->source_url.empty()) image_card_request_source_url(ctx);
+    if (!ctx->source_url.empty()) image_card_schedule_source_refresh(ctx, IMAGE_CARD_MODAL_REFRESH_DELAY_MS, "tile");
   }
 }
 
@@ -565,6 +631,7 @@ inline void image_card_open_modal(ImageCardCtx *ctx) {
     ESP_LOGW("image_card", "No camera image is ready to open");
     return;
   }
+  ESP_LOGI("image_card", "Opening image modal for %s", ctx->entity_id.c_str());
 
   ControlModalShell shell = control_modal_open_shell(
     ControlModalKind::IMAGE_CARD, ctx->btn, ctx->width_compensation_percent,
@@ -596,7 +663,7 @@ inline void image_card_open_modal(ImageCardCtx *ctx) {
   lv_obj_move_background(ui.image_widget);
   lv_obj_move_foreground(ui.back_btn);
   lv_obj_move_foreground(ui.overlay);
-  if (!ctx->source_url.empty()) image_card_request_source_url(ctx);
+  if (!ctx->source_url.empty()) image_card_schedule_source_refresh(ctx, IMAGE_CARD_MODAL_REFRESH_DELAY_MS, "modal");
 }
 
 inline void image_card_handle_picture(ImageCardCtx *ctx, esphome::StringRef picture) {
@@ -621,6 +688,22 @@ inline void image_card_handle_picture(ImageCardCtx *ctx, esphome::StringRef pict
     image_card_request_source_url(ctx);
   } else if (ctx->next_refresh_ms == 0) {
     image_card_schedule_next_refresh(ctx);
+  }
+}
+
+inline void refresh_image_cards() {
+  if (!ha_api_state_connected()) return;
+  ImageCardCtx *contexts = image_card_contexts();
+  uint32_t now = esphome::millis();
+  for (int i = 0; i < 4; i++) {
+    ImageCardCtx *ctx = &contexts[i];
+    if (!ctx->active) continue;
+    if (!ctx->image_ready) {
+      ctx->retry_deadline_ms = now + IMAGE_CARD_STARTUP_RETRY_MS;
+      image_card_set_loading_state(ctx, "Loading", true);
+    }
+    ctx->next_picture_retry_ms = 0;
+    image_card_request_picture(ctx);
   }
 }
 

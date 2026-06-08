@@ -24,16 +24,21 @@ api:
           apply_registered_ha_control_availability(true);
           ha_retry_unavailable_states(true);
           refresh_weather_forecast_cards();
+          refresh_image_cards();
         }
     - delay: 2s
     - lambda: |-
-        if (ha_api_state_connected()) ha_retry_unavailable_states(true);
+        if (ha_api_state_connected()) {
+          ha_retry_unavailable_states(true);
+          refresh_image_cards();
+        }
         todo_reload_active_modal();
     - delay: 8s
     - lambda: |-
         if (ha_api_state_connected()) {
           ha_retry_unavailable_states(true);
           refresh_weather_forecast_cards();
+          refresh_image_cards();
         }
         todo_reload_active_modal();
     - delay: 20s
@@ -41,6 +46,7 @@ api:
         if (ha_api_state_connected()) {
           ha_retry_unavailable_states(true);
           refresh_weather_forecast_cards();
+          refresh_image_cards();
         }
         todo_reload_active_modal();
   on_client_disconnected:

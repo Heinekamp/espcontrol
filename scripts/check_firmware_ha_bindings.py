@@ -660,8 +660,8 @@ def firmware_image_card_quality_errors(firmware_dir: Path, root: Path) -> list[s
         errors.append(f"{rel}: cap high-resolution image card modal downloads")
     if "image_card_limit_target_size" not in text:
         errors.append(f"{rel}: scale image card modal downloads to a display-appropriate size")
-    if "if (!ctx->source_url.empty()) image_card_request_source_url(ctx);" not in text:
-        errors.append(f"{rel}: request a modal-sized image when opening image cards")
+    if "image_card_schedule_source_refresh(ctx, IMAGE_CARD_MODAL_REFRESH_DELAY_MS, \"modal\")" not in text:
+        errors.append(f"{rel}: queue a modal-sized image refresh when opening image cards")
     if "ctx->image->set_target_size(width, height)" not in text:
         errors.append(f"{rel}: set image card download target size before requesting images")
     if "lv_obj_set_style_clip_corner(ui.panel, true, LV_PART_MAIN)" not in text:
@@ -670,6 +670,34 @@ def firmware_image_card_quality_errors(firmware_dir: Path, root: Path) -> list[s
         errors.append(f"{rel}: preserve image card rounded corners while pressed")
     if "image_card_pressed_selector" not in text:
         errors.append(f"{rel}: apply image card corner clipping to the pressed state")
+    return errors
+
+
+def firmware_image_card_startup_errors(
+    firmware_dir: Path,
+    core_infra_path: Path,
+    root: Path,
+) -> list[str]:
+    path = firmware_dir / "button_grid_image.h"
+    if not path.exists():
+        return []
+    rel = path.relative_to(root)
+    text = path.read_text(encoding="utf-8")
+    errors: list[str] = []
+    if "inline void refresh_image_cards()" not in text:
+        errors.append(f"{rel}: refresh image cards when Home Assistant reconnects")
+    if "if (!ha_api_state_connected())" not in text:
+        errors.append(f"{rel}: wait for Home Assistant state subscription before requesting image attributes")
+    if "image_card_sized_url(ctx->source_url, width, height)" not in text:
+        errors.append(f"{rel}: request display-sized Home Assistant image card downloads")
+    if '"/api/camera_proxy/"' not in text or '"/api/image_proxy/"' not in text:
+        errors.append(f"{rel}: recognize Home Assistant camera and image proxy URLs")
+
+    if core_infra_path.exists():
+        core_rel = core_infra_path.relative_to(root)
+        core_text = core_infra_path.read_text(encoding="utf-8")
+        if core_text.count("refresh_image_cards();") < 4:
+            errors.append(f"{core_rel}: refresh image cards through Home Assistant connect retries")
     return errors
 
 
@@ -859,6 +887,7 @@ def run_scan() -> int:
     errors.extend(firmware_image_card_entity_errors(FIRMWARE_DIR, ROOT))
     errors.extend(firmware_image_card_base_url_errors(FIRMWARE_DIR, ROOT))
     errors.extend(firmware_image_card_quality_errors(FIRMWARE_DIR, ROOT))
+    errors.extend(firmware_image_card_startup_errors(FIRMWARE_DIR, CORE_INFRA_PATH, ROOT))
     errors.extend(firmware_screensaver_wake_guard_errors(BACKLIGHT_PATH, COVER_ART_PATH, ROOT))
     errors.extend(firmware_climate_step_errors(FIRMWARE_DIR, ROOT))
     errors.extend(
@@ -1178,6 +1207,28 @@ def expect_image_card_quality_errors(name: str, text: str, expected: tuple[str, 
         (firmware_dir / "button_grid_image.h").write_text(text, encoding="utf-8")
 
         errors = firmware_image_card_quality_errors(firmware_dir, root)
+        for item in expected:
+            assert any(item in error for error in errors), f"{name}: missing {item!r} in {errors!r}"
+        if not expected:
+            assert not errors, f"{name}: expected no errors, got {errors!r}"
+
+
+def expect_image_card_startup_errors(
+    name: str,
+    text: str,
+    core_text: str,
+    expected: tuple[str, ...],
+) -> None:
+    with TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        firmware_dir = root / "components" / "espcontrol"
+        core_path = root / "common" / "device" / "core_infra.yaml"
+        firmware_dir.mkdir(parents=True)
+        core_path.parent.mkdir(parents=True)
+        (firmware_dir / "button_grid_image.h").write_text(text, encoding="utf-8")
+        core_path.write_text(core_text, encoding="utf-8")
+
+        errors = firmware_image_card_startup_errors(firmware_dir, core_path, root)
         for item in expected:
             assert any(item in error for error in errors), f"{name}: missing {item!r} in {errors!r}"
         if not expected:
@@ -2115,7 +2166,7 @@ def run_self_test() -> int:
         (
             "cap high-resolution image card modal downloads",
             "scale image card modal downloads to a display-appropriate size",
-            "request a modal-sized image when opening image cards",
+            "queue a modal-sized image refresh when opening image cards",
             "set image card download target size before requesting images",
             "clip image card modal content to rounded panel corners",
             "preserve image card rounded corners while pressed",
@@ -2134,8 +2185,58 @@ def run_self_test() -> int:
         "}\n"
         "inline void image_card_open_modal(ImageCardCtx *ctx) {\n"
         "  lv_obj_set_style_clip_corner(ui.panel, true, LV_PART_MAIN);\n"
-        "  if (!ctx->source_url.empty()) image_card_request_source_url(ctx);\n"
+        "  image_card_schedule_source_refresh(ctx, IMAGE_CARD_MODAL_REFRESH_DELAY_MS, \"modal\");\n"
         "}\n",
+        (),
+    )
+    expect_image_card_startup_errors(
+        "image card missing startup reconnect refresh",
+        "inline void image_card_request_picture(ImageCardCtx *ctx) {\n"
+        "  bool requested = ha_get_attribute(ctx->entity_id, std::string(\"entity_picture\"), callback);\n"
+        "}\n"
+        "inline void image_card_request_source_url(ImageCardCtx *ctx) {\n"
+        "  ctx->url = image_card_cache_bust_url(ctx->source_url);\n"
+        "}\n",
+        "api:\n"
+        "  on_client_connected:\n"
+        "    - lambda: |-\n"
+        "        refresh_weather_forecast_cards();\n",
+        (
+            "refresh image cards when Home Assistant reconnects",
+            "wait for Home Assistant state subscription before requesting image attributes",
+            "request display-sized Home Assistant image card downloads",
+            "recognize Home Assistant camera and image proxy URLs",
+            "refresh image cards through Home Assistant connect retries",
+        ),
+    )
+    expect_image_card_startup_errors(
+        "image card refreshes on Home Assistant reconnect",
+        "inline bool image_card_home_assistant_proxy_url(const std::string &url) {\n"
+        "  return url.find(\"/api/camera_proxy/\") != std::string::npos ||\n"
+        "         url.find(\"/api/image_proxy/\") != std::string::npos;\n"
+        "}\n"
+        "inline void image_card_request_picture(ImageCardCtx *ctx) {\n"
+        "  if (!ha_api_state_connected()) return;\n"
+        "}\n"
+        "inline void image_card_request_source_url(ImageCardCtx *ctx) {\n"
+        "  ctx->url = image_card_cache_bust_url(image_card_sized_url(ctx->source_url, width, height));\n"
+        "}\n"
+        "inline void refresh_image_cards() {\n"
+        "  image_card_request_picture(ctx);\n"
+        "}\n",
+        "api:\n"
+        "  on_client_connected:\n"
+        "    - lambda: |-\n"
+        "        refresh_image_cards();\n"
+        "    - delay: 2s\n"
+        "    - lambda: |-\n"
+        "        refresh_image_cards();\n"
+        "    - delay: 8s\n"
+        "    - lambda: |-\n"
+        "        refresh_image_cards();\n"
+        "    - delay: 20s\n"
+        "    - lambda: |-\n"
+        "        refresh_image_cards();\n",
         (),
     )
     valid_cover_art_wake_guard = (
