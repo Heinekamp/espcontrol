@@ -1681,7 +1681,7 @@ assertButtonRoundTrip(hooks, "image card label and refresh options", {
 assertButtonRoundTrip(hooks, "image card icon option", {
   entity: "camera.front_door",
   label: "",
-  icon: "Auto",
+  icon: "Camera",
   icon_on: "Auto",
   sensor: "",
   unit: "",
@@ -1692,7 +1692,7 @@ assertButtonRoundTrip(hooks, "image card icon option", {
 assertButtonRoundTrip(hooks, "image card label and icon options", {
   entity: "camera.front_door",
   label: "Front Door",
-  icon: "Auto",
+  icon: "Camera",
   icon_on: "Auto",
   sensor: "",
   unit: "",

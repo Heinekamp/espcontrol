@@ -43,6 +43,7 @@ struct lv_obj_t {};
 using lv_coord_t = int;
 using lv_style_selector_t = int;
 using lv_color_t = int;
+using lv_grid_align_t = int;
 inline const char *espcontrol_i18n(const char *text) { return text ? text : ""; }
 inline std::string espcontrol_i18n(const std::string &text) { return text; }
 constexpr int LV_PART_MAIN = 0;
@@ -53,6 +54,8 @@ constexpr int LV_STATE_DISABLED = 4;
 constexpr int LV_LABEL_LONG_WRAP = 0;
 constexpr int LV_ALIGN_BOTTOM_LEFT = 0;
 constexpr int LV_ALIGN_BOTTOM_RIGHT = 1;
+constexpr int LV_GRID_ALIGN_START = 0;
+constexpr int LV_GRID_ALIGN_STRETCH = 1;
 constexpr int LV_OPA_COVER = 255;
 constexpr int LV_OPA_50 = 128;
 constexpr int LV_OBJ_FLAG_CLICKABLE = 1;
@@ -76,8 +79,18 @@ inline void lv_obj_add_flag(lv_obj_t *, int) {}
 inline void lv_obj_clear_flag(lv_obj_t *, int) {}
 inline uint32_t lv_obj_get_child_cnt(lv_obj_t *) { return 0; }
 inline lv_obj_t *lv_obj_get_child(lv_obj_t *, uint32_t) { return nullptr; }
+inline int lv_obj_get_width(lv_obj_t *) { return 480; }
+inline int lv_obj_get_height(lv_obj_t *) { return 480; }
+inline int lv_obj_get_style_pad_left(lv_obj_t *, int) { return 0; }
+inline int lv_obj_get_style_pad_right(lv_obj_t *, int) { return 0; }
+inline int lv_obj_get_style_pad_top(lv_obj_t *, int) { return 0; }
+inline int lv_obj_get_style_pad_bottom(lv_obj_t *, int) { return 0; }
+inline int lv_obj_get_style_pad_column(lv_obj_t *, int) { return 0; }
+inline int lv_obj_get_style_pad_row(lv_obj_t *, int) { return 0; }
 inline void lv_label_set_long_mode(lv_obj_t *, int) {}
 inline void lv_obj_set_width(lv_obj_t *, int) {}
+inline void lv_obj_set_height(lv_obj_t *, int) {}
+inline void lv_obj_set_grid_cell(lv_obj_t *, int, int, int, int, int, int) {}
 inline void lv_label_set_text(lv_obj_t *, const char *) {}
 inline void lv_obj_align(lv_obj_t *, int, int, int) {}
 inline void lv_obj_move_foreground(lv_obj_t *) {}
@@ -87,6 +100,9 @@ inline void lv_obj_move_foreground(lv_obj_t *) {}
 #include "button_grid_layout.h"
 
 int main() {
+  assert(grid_track_span_size(480, 8, 8, 15, 3, 1) == 144);
+  assert(grid_track_span_size(480, 8, 8, 15, 3, 2) == 303);
+
   assert(cfg_field("light.kitchen;Kitchen;Auto;Lightbulb", 0) == "light.kitchen");
   assert(cfg_field("light.kitchen;Kitchen;Auto;Lightbulb", 3) == "Lightbulb");
   assert(cfg_field("light.kitchen;Kitchen", 4) == "");

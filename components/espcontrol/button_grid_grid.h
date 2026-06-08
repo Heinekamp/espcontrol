@@ -658,9 +658,7 @@ inline void grid_refresh_layout(
     int col = pos % COLS, row = pos / COLS;
     int row_span = order.row_span[idx - 1] > 0 ? order.row_span[idx - 1] : 1;
     int col_span = order.col_span[idx - 1] > 0 ? order.col_span[idx - 1] : 1;
-    lv_obj_set_grid_cell(s.btn,
-      LV_GRID_ALIGN_STRETCH, col, col_span,
-      LV_GRID_ALIGN_STRETCH, row, row_span);
+    set_grid_card_cell(s.btn, main_page_obj, col, row, col_span, row_span, COLS, ROWS);
   }
 
   if (main_page_obj) lv_obj_update_layout(main_page_obj);
@@ -693,6 +691,7 @@ inline void grid_phase1(
   for (int i = 0; i < NS; i++)
     lv_obj_add_flag(slots[i].btn, LV_OBJ_FLAG_HIDDEN);
   configure_grid_layout(main_page_obj, NS, COLS);
+  int ROWS = (NS + COLS - 1) / COLS;
   if (NS != cfg.num_slots) {
     ESP_LOGW("sensors", "Grid slot count %d exceeds max %d; ignoring extra slots",
       cfg.num_slots, MAX_GRID_SLOTS);
@@ -746,9 +745,7 @@ inline void grid_phase1(
     int col = pos % COLS, row = pos / COLS;
     int row_span = order.row_span[idx - 1] > 0 ? order.row_span[idx - 1] : 1;
     int col_span = order.col_span[idx - 1] > 0 ? order.col_span[idx - 1] : 1;
-    lv_obj_set_grid_cell(s.btn,
-      LV_GRID_ALIGN_STRETCH, col, col_span,
-      LV_GRID_ALIGN_STRETCH, row, row_span);
+    set_grid_card_cell(s.btn, main_page_obj, col, row, col_span, row_span, COLS, ROWS);
 
     if (cfg.wrap_tall_labels && row_span > 1) {
       lv_label_set_long_mode(s.text_lbl, LV_LABEL_LONG_WRAP);
@@ -1310,8 +1307,11 @@ inline void grid_phase2(
     lv_obj_t *back_btn = create_grid_card_button(
       sub_scr, sp_radius, sp_pad, sp_btn_fnt, sp_txt_color);
     apply_button_colors(back_btn, false, DEFAULT_SLIDER_COLOR, has_off, off_val);
-    lv_obj_set_grid_cell(back_btn, LV_GRID_ALIGN_STRETCH, sp_ord.back_pos % COLS, sp_ord.back_col_span,
-      LV_GRID_ALIGN_STRETCH, sp_ord.back_pos / COLS, sp_ord.back_row_span);
+    set_grid_card_cell(
+      back_btn, sub_scr,
+      sp_ord.back_pos % COLS, sp_ord.back_pos / COLS,
+      sp_ord.back_col_span, sp_ord.back_row_span,
+      COLS, ROWS);
     BtnSlot back_slot = create_dynamic_card_slot(
       back_btn, sp_icon_fnt, display_sensor_font(display), sp_btn_fnt, sp_txt_color,
       cfg.subpage_chevron_font);
@@ -1377,7 +1377,7 @@ inline void grid_phase2(
       lv_obj_t *sb_btn = create_grid_card_button(
         sub_scr, sp_radius, sp_pad, sp_btn_fnt, sp_txt_color);
       int cs = sp_ord.col_span[bn - 1] > 0 ? sp_ord.col_span[bn - 1] : 1;
-      lv_obj_set_grid_cell(sb_btn, LV_GRID_ALIGN_STRETCH, col, cs, LV_GRID_ALIGN_STRETCH, row, rs);
+      set_grid_card_cell(sb_btn, sub_scr, col, row, cs, rs, COLS, ROWS);
       BtnSlot sub_slot = create_dynamic_card_slot(
         sb_btn, sp_icon_fnt, display_sensor_font(display), sp_btn_fnt, sp_txt_color,
         cfg.subpage_chevron_font);

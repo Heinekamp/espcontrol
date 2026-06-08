@@ -130,6 +130,55 @@ inline void clear_spanned_cells(const OrderResult &order, int num_slots, int col
   }
 }
 
+inline lv_coord_t grid_track_span_size(lv_coord_t total_size,
+                                       lv_coord_t pad_start,
+                                       lv_coord_t pad_end,
+                                       lv_coord_t gap,
+                                       int track_count,
+                                       int span) {
+  if (track_count < 1) track_count = 1;
+  if (span < 1) span = 1;
+  if (span > track_count) span = track_count;
+  lv_coord_t usable = total_size - pad_start - pad_end - gap * (track_count - 1);
+  if (usable <= 0) return 0;
+  lv_coord_t track_size = usable / track_count;
+  return track_size * span + gap * (span - 1);
+}
+
+inline void set_grid_card_cell(lv_obj_t *btn,
+                               lv_obj_t *grid,
+                               int col,
+                               int row,
+                               int col_span,
+                               int row_span,
+                               int cols,
+                               int rows) {
+  if (!btn) return;
+  if (col_span < 1) col_span = 1;
+  if (row_span < 1) row_span = 1;
+  lv_grid_align_t col_align = col_span > 1 ? LV_GRID_ALIGN_START : LV_GRID_ALIGN_STRETCH;
+  lv_grid_align_t row_align = row_span > 1 ? LV_GRID_ALIGN_START : LV_GRID_ALIGN_STRETCH;
+  lv_obj_set_grid_cell(btn, col_align, col, col_span, row_align, row, row_span);
+
+  if (!grid || (col_span == 1 && row_span == 1)) return;
+  lv_coord_t width = grid_track_span_size(
+    lv_obj_get_width(grid),
+    lv_obj_get_style_pad_left(grid, LV_PART_MAIN),
+    lv_obj_get_style_pad_right(grid, LV_PART_MAIN),
+    lv_obj_get_style_pad_column(grid, LV_PART_MAIN),
+    cols,
+    col_span);
+  lv_coord_t height = grid_track_span_size(
+    lv_obj_get_height(grid),
+    lv_obj_get_style_pad_top(grid, LV_PART_MAIN),
+    lv_obj_get_style_pad_bottom(grid, LV_PART_MAIN),
+    lv_obj_get_style_pad_row(grid, LV_PART_MAIN),
+    rows,
+    row_span);
+  if (col_span > 1 && width > 0) lv_obj_set_width(btn, width);
+  if (row_span > 1 && height > 0) lv_obj_set_height(btn, height);
+}
+
 // ── Button visuals ────────────────────────────────────────────────────
 
 // Apply on/off background colors to a button's checked/pressed/default states
