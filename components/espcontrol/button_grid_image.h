@@ -80,15 +80,29 @@ inline ImageCardCtx *acquire_image_card_context(const GridConfig &cfg) {
   return nullptr;
 }
 
-inline void image_card_apply_widget_geometry(lv_obj_t *btn, lv_obj_t *widget,
-                                             esphome::artwork_image::ArtworkImage *image) {
-  if (!btn || !widget || !image) return;
+inline bool image_card_position_widget(lv_obj_t *btn, lv_obj_t *widget,
+                                       lv_coord_t *target_width = nullptr,
+                                       lv_coord_t *target_height = nullptr) {
+  if (!btn || !widget) return false;
   lv_obj_update_layout(btn);
   lv_coord_t width = lv_obj_get_width(btn);
   lv_coord_t height = lv_obj_get_height(btn);
-  if (width <= 0 || height <= 0) return;
-  lv_obj_set_pos(widget, 0, 0);
+  if (width <= 0 || height <= 0) return false;
+  lv_coord_t pad_left = lv_obj_get_style_pad_left(btn, LV_PART_MAIN);
+  lv_coord_t pad_top = lv_obj_get_style_pad_top(btn, LV_PART_MAIN);
+  lv_obj_set_pos(widget, -pad_left, -pad_top);
   lv_obj_set_size(widget, width, height);
+  if (target_width) *target_width = width;
+  if (target_height) *target_height = height;
+  return true;
+}
+
+inline void image_card_apply_widget_geometry(lv_obj_t *btn, lv_obj_t *widget,
+                                             esphome::artwork_image::ArtworkImage *image) {
+  if (!image) return;
+  lv_coord_t width = 0;
+  lv_coord_t height = 0;
+  if (!image_card_position_widget(btn, widget, &width, &height)) return;
   image->set_target_size(width, height);
   image->set_resize_mode(esphome::artwork_image::ImageResizeMode::COVER);
 }
@@ -108,6 +122,10 @@ inline void setup_image_card(BtnSlot &s) {
 #endif
   lv_obj_add_flag(img, LV_OBJ_FLAG_HIDDEN);
   lv_obj_clear_flag(img, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_clear_flag(img, LV_OBJ_FLAG_SCROLLABLE);
+  lv_obj_set_style_pad_all(img, 0, LV_PART_MAIN);
+  lv_obj_set_style_border_width(img, 0, LV_PART_MAIN);
+  lv_obj_set_style_bg_opa(img, LV_OPA_TRANSP, LV_PART_MAIN);
   lv_obj_set_style_radius(img, lv_obj_get_style_radius(s.btn, LV_PART_MAIN), LV_PART_MAIN);
   lv_obj_set_style_clip_corner(img, true, LV_PART_MAIN);
   lv_obj_set_user_data(s.sensor_container, img);

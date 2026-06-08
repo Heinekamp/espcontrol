@@ -596,9 +596,7 @@ inline void refresh_card_layout(BtnSlot &s, const ParsedCfg &p,
       ? static_cast<lv_obj_t *>(lv_obj_get_user_data(s.sensor_container))
       : nullptr;
     if (widget) {
-      lv_obj_update_layout(s.btn);
-      lv_obj_set_pos(widget, 0, 0);
-      lv_obj_set_size(widget, lv_obj_get_width(s.btn), lv_obj_get_height(s.btn));
+      image_card_position_widget(s.btn, widget);
     }
   } else if (p.type == "media") {
     refresh_media_card_layout(s, p, cfg, row_span);
