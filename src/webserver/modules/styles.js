@@ -110,8 +110,8 @@ var CSS =
   "background:#212121}" +
   ".sp-image-preview-text{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);" +
   "font-size:var(--btn-label);line-height:1;color:#fff;font-weight:400}" +
-  ".sp-image-preview-label{position:absolute;left:8%;top:8%;max-width:84%;box-sizing:border-box;" +
-  "padding:.35em .55em;border-radius:4px;background:rgba(0,0,0,.58);color:#fff;" +
+  ".sp-image-preview-label{position:absolute;left:0;right:0;bottom:0;box-sizing:border-box;" +
+  "padding:.35em .55em;background:rgba(0,0,0,.58);color:#fff;" +
   "font-size:var(--btn-label);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:1}" +
   ".sp-media-h-slider{position:absolute;left:8%;right:8%;bottom:10%;height:7.5%;border-radius:999px;" +
   "background:#212121;overflow:hidden;pointer-events:none}" +
