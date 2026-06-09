@@ -249,9 +249,6 @@ std::string ArtworkImage::request_update_url(const std::string &url, int max_sou
       return effective_url;
     }
     this->queue_pending_update_(effective_url);
-    ESP_LOGI(TAG, "Cancelling in-flight artwork update for newer URL");
-    this->end_connection_();
-    this->start_pending_update_();
     return effective_url;
   }
   this->url_ = effective_url;
@@ -316,9 +313,7 @@ void ArtworkImage::update() {
   if (this->downloader_ == nullptr) {
     ESP_LOGE(TAG, "Download failed before response; source=%s url=%s",
              classify_artwork_url_for_log(this->url_), sanitize_artwork_url_for_log(this->url_).c_str());
-    this->end_connection_();
-    this->download_error_callback_.call();
-    this->start_pending_update_();
+    this->fail_download_();
     return;
   }
 
@@ -328,6 +323,10 @@ void ArtworkImage::update() {
     // Image hasn't changed on server. Skip download.
     ESP_LOGI(TAG, "Server returned HTTP 304 (Not Modified). Download skipped.");
     this->end_connection_();
+    if (this->has_newer_pending_update_()) {
+      this->start_pending_update_();
+      return;
+    }
     this->download_finished_callback_.call(true);
     this->start_pending_update_();
     return;
@@ -337,9 +336,7 @@ void ArtworkImage::update() {
              http_code, this->downloader_->content_length,
              response_header_for_log(this->downloader_.get(), CONTENT_TYPE_HEADER_NAME).c_str(),
              classify_artwork_url_for_log(this->url_), sanitize_artwork_url_for_log(this->url_).c_str());
-    this->end_connection_();
-    this->download_error_callback_.call();
-    this->start_pending_update_();
+    this->fail_download_();
     return;
   }
 
@@ -357,9 +354,7 @@ void ArtworkImage::update() {
 
   ImageFormat resolved = this->detect_format_();
   if (!this->create_decoder_(resolved, total_size)) {
-    this->end_connection_();
-    this->download_error_callback_.call();
-    this->start_pending_update_();
+    this->fail_download_();
     return;
   }
   this->log_state_("decoder-ready");
@@ -535,9 +530,7 @@ void ArtworkImage::loop() {
     if (this->download_buffer_.unread() < 12) {
       if (millis() - this->last_data_millis_ > DOWNLOAD_STALL_TIMEOUT_MS) {
         ESP_LOGE(TAG, "Download stalled waiting for format detection bytes");
-        this->end_connection_();
-        this->download_error_callback_.call();
-        this->start_pending_update_();
+        this->fail_download_();
       }
       return;
     }
@@ -547,9 +540,7 @@ void ArtworkImage::loop() {
       ESP_LOGE(TAG, "Could not determine image format from headers or file content; content_type=%s bytes=%zu source=%s",
                response_header_for_log(this->downloader_.get(), CONTENT_TYPE_HEADER_NAME).c_str(),
                this->download_buffer_.unread(), classify_artwork_url_for_log(this->url_));
-      this->end_connection_();
-      this->download_error_callback_.call();
-      this->start_pending_update_();
+      this->fail_download_();
       return;
     }
 
@@ -558,9 +549,7 @@ void ArtworkImage::loop() {
       total_size = this->downloader_->get_bytes_read();
     }
     if (!this->create_decoder_(resolved, total_size)) {
-      this->end_connection_();
-      this->download_error_callback_.call();
-      this->start_pending_update_();
+      this->fail_download_();
       return;
     }
     this->log_state_("decoder-ready");
@@ -980,6 +969,12 @@ bool ArtworkImage::decode_buffered_data_() {
 }
 
 void ArtworkImage::finish_download_() {
+  if (this->has_newer_pending_update_()) {
+    ESP_LOGI(TAG, "Discarding completed artwork because a newer URL is queued");
+    this->end_connection_();
+    this->start_pending_update_();
+    return;
+  }
   if (!this->promote_decode_buffer_()) {
     this->fail_download_();
     return;
@@ -1006,6 +1001,12 @@ void ArtworkImage::finish_download_() {
 }
 
 void ArtworkImage::fail_download_() {
+  if (this->has_newer_pending_update_()) {
+    ESP_LOGW(TAG, "Skipping stale artwork failure because a newer URL is queued");
+    this->end_connection_();
+    this->start_pending_update_();
+    return;
+  }
   this->end_connection_();
   this->download_error_callback_.call();
   this->start_pending_update_();

@@ -111,10 +111,12 @@ class ArtworkImage : public PollingComponent,
   size_t resize_download_buffer(size_t size) { return this->download_buffer_.resize(size); }
 
   template<typename F> void add_on_finished_callback(F &&callback) {
-    this->download_finished_callback_.add(std::forward<F>(callback));
+    std::function<void(bool)> cb(std::forward<F>(callback));
+    if (cb) this->download_finished_callback_.add(std::move(cb));
   }
   template<typename F> void add_on_error_callback(F &&callback) {
-    this->download_error_callback_.add(std::forward<F>(callback));
+    std::function<void()> cb(std::forward<F>(callback));
+    if (cb) this->download_error_callback_.add(std::move(cb));
   }
 
   bool is_big_endian() const { return this->is_big_endian_; }
@@ -138,6 +140,9 @@ class ArtworkImage : public PollingComponent,
   bool detect_heic_();
   bool create_decoder_(ImageFormat format, size_t total_size);
   bool is_busy_() const { return this->downloader_ != nullptr || this->decoder_ != nullptr; }
+  bool has_newer_pending_update_() const {
+    return this->update_pending_ && !this->pending_url_.empty() && this->pending_url_ != this->url_;
+  }
   void queue_pending_update_(const std::string &url);
   void start_pending_update_();
   void log_state_(const char *stage);
