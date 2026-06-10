@@ -51,6 +51,8 @@ script:
       - lambda: |-
           bool enabled = id(clock_bar_enabled).state;
           bool screensaver_active =
+              id(display_asleep) ||
+              id(screen_schedule_asleep) ||
               id(is_clock_showing) ||
               id(cover_art_screensaver_active) ||
               id(screensaver_display_off_active) ||
