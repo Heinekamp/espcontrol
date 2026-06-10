@@ -49,6 +49,7 @@ struct ImageCardCtx {
   bool modal_callbacks_bound = false;
   bool requested_once = false;
   bool image_ready = false;
+  bool download_active = false;
   bool timer_only = false;
   bool modal_fit = false;
   lv_timer_t *modal_cleanup_timer = nullptr;
@@ -366,6 +367,7 @@ inline void image_card_apply_downloaded(ImageCardCtx *ctx) {
   if (!ctx || !ctx->active || !ctx->widget || !ctx->image) return;
   if (ctx->image->get_url() != ctx->url) return;
   ctx->image_ready = true;
+  ctx->download_active = false;
   ctx->startup_download_errors = 0;
   ctx->next_download_retry_ms = 0;
   image_card_hide_loading(ctx);
@@ -379,6 +381,7 @@ inline void image_card_apply_downloaded(ImageCardCtx *ctx) {
 
 inline void image_card_handle_download_error(ImageCardCtx *ctx) {
   if (!ctx) return;
+  ctx->download_active = false;
   ESP_LOGW("image_card", "Image download failed for %s", ctx->entity_id.c_str());
   uint32_t now = esphome::millis();
   if (!ctx->image_ready && image_card_startup_retry_active(ctx, now) &&
@@ -487,6 +490,7 @@ inline void reset_image_card_pool(const GridConfig &cfg) {
     }
     contexts[i].requested_once = false;
     contexts[i].image_ready = false;
+    contexts[i].download_active = false;
     contexts[i].timer_only = false;
     contexts[i].modal_fit = false;
     contexts[i].startup_download_errors = 0;
@@ -1074,6 +1078,11 @@ inline void image_card_request_source_url(ImageCardCtx *ctx) {
   lv_obj_t *loading = image_card_loading_widget(ctx->widget);
   image_card_position_widget(ctx->btn, loading);
   image_card_refresh_loading_layout(loading);
+  if (ctx->download_active) {
+    ESP_LOGD("image_card", "Skipping duplicate image refresh while download is active for %s",
+             ctx->entity_id.c_str());
+    return;
+  }
   if (!image_card_memory_available(ctx, "tile", width, height)) {
     ctx->next_download_retry_ms = now + IMAGE_CARD_RETRY_INTERVAL_MS;
     if (!ctx->image_ready) {
@@ -1088,6 +1097,7 @@ inline void image_card_request_source_url(ImageCardCtx *ctx) {
   ctx->url = image_card_cache_bust_url(
     image_card_sized_url(ctx->source_url, request_width, request_height));
   ctx->requested_once = true;
+  ctx->download_active = true;
   ctx->next_download_retry_ms = 0;
   image_card_schedule_next_refresh(ctx, now);
   ctx->image->set_target_size(width, height);
@@ -1095,6 +1105,7 @@ inline void image_card_request_source_url(ImageCardCtx *ctx) {
   ESP_LOGI("image_card", "Downloading camera image for %s", ctx->entity_id.c_str());
   int max_source_dim = request_width > request_height ? request_width : request_height;
   std::string effective_url = ctx->image->request_update_url(ctx->url, max_source_dim);
+  if (effective_url.empty()) ctx->download_active = false;
   if (!effective_url.empty()) {
     ctx->url = effective_url;
   }
