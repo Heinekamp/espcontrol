@@ -732,11 +732,6 @@ inline void setup_image_card(BtnSlot &s) {
   if (s.sensor_container) lv_obj_add_flag(s.sensor_container, LV_OBJ_FLAG_HIDDEN);
   if (s.text_lbl) lv_obj_add_flag(s.text_lbl, LV_OBJ_FLAG_HIDDEN);
   if (s.subpage_lbl) lv_obj_add_flag(s.subpage_lbl, LV_OBJ_FLAG_HIDDEN);
-#ifdef ESPCONTROL_JC8012P4A1_DISABLE_IMAGE_CARDS_20260611
-  if (s.sensor_container) lv_obj_set_user_data(s.sensor_container, nullptr);
-  return;
-#endif
-
 #if ESPHOME_VERSION_CODE >= VERSION_CODE(2026, 4, 0)
   lv_obj_t *img = lv_image_create(s.btn);
 #else
@@ -787,7 +782,8 @@ inline lv_obj_t *image_card_label_shadow(lv_obj_t *label, lv_obj_t *btn) {
   int32_t count = static_cast<int32_t>(lv_obj_get_child_cnt(btn));
   for (int32_t i = 0; i < count; i++) {
     lv_obj_t *child = lv_obj_get_child(btn, i);
-    if (child && child != label && lv_obj_get_user_data(child) == label) {
+    if (child && child != label && lv_obj_check_type(child, &lv_label_class) &&
+        lv_obj_get_user_data(child) == label) {
       return child;
     }
   }
@@ -1525,12 +1521,6 @@ inline void image_card_refresh_due() {
 inline bool bind_image_card(BtnSlot &s, const ParsedCfg &p, const GridConfig &cfg,
                             bool bind_click_handler = false) {
   if (p.type != "image") return false;
-#ifdef ESPCONTROL_JC8012P4A1_DISABLE_IMAGE_CARDS_20260611
-  (void) s;
-  (void) cfg;
-  (void) bind_click_handler;
-  return true;
-#endif
   lv_obj_t *widget = s.sensor_container
     ? static_cast<lv_obj_t *>(lv_obj_get_user_data(s.sensor_container))
     : nullptr;
