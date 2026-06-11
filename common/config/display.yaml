@@ -26,10 +26,10 @@ esphome:
     - priority: -150
       then:
         - lambda: |-
-            std::vector<std::string> clock_bar_temperature_entities =
+            std::vector<std::string> restored_clock_bar_temperature_entities =
                 parse_clock_bar_temperature_entities(id(clock_bar_temperature_entities).state);
             std::string clock_bar_temperature_entity =
-                clock_bar_temperature_entities.empty() ? "" : clock_bar_temperature_entities[0];
+                restored_clock_bar_temperature_entities.empty() ? "" : restored_clock_bar_temperature_entities[0];
             if (clock_bar_temperature_entity.empty()) {
               if (id(outdoor_temp_enable).state && !id(outdoor_temp_entity).state.empty()) {
                 clock_bar_temperature_entity = id(outdoor_temp_entity).state;
