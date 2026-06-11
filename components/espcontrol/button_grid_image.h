@@ -1088,11 +1088,6 @@ inline void image_card_request_picture(ImageCardCtx *ctx) {
       image_card_set_loading_state(ctx, "Loading", true);
       return;
     }
-    if (!ctx->access_token.empty()) {
-      std::string authed_path = image_card_proxy_path_with_token(proxy_path, ctx->access_token);
-      image_card_handle_picture(ctx, esphome::StringRef(authed_path));
-      return;
-    }
     const uint32_t generation = ha_subscription_generation();
     bool requested = ha_get_attribute(
       entity_id,
@@ -1102,10 +1097,13 @@ inline void image_card_request_picture(ImageCardCtx *ctx) {
           if (!image_card_context_current(ctx, entity_id, generation)) return;
           std::string token = string_ref_limited(token_ref, 512);
           if (token.empty() || token == "unknown" || token == "unavailable") {
+            ctx->access_token.clear();
             image_card_schedule_picture_retry(ctx, IMAGE_CARD_RETRY_INTERVAL_MS);
             image_card_set_loading_state(ctx, "Loading", true);
             return;
           }
+          // Home Assistant image proxy tokens can rotate, so refresh the token
+          // whenever we rebuild the proxy URL instead of reusing a stale one.
           ctx->access_token = token;
           std::string authed_path = image_card_proxy_path_with_token(proxy_path, token);
           image_card_handle_picture(ctx, esphome::StringRef(authed_path));
