@@ -1361,6 +1361,7 @@ inline void image_card_open_modal(ImageCardCtx *ctx) {
   if (ctx->modal_cleanup_timer) {
     lv_timer_del(ctx->modal_cleanup_timer);
     ctx->modal_cleanup_timer = nullptr;
+    image_card_finish_modal_cleanup(ctx);
   }
   ctx->next_download_retry_ms = 0;
   ctx->image->cancel_update();
