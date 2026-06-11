@@ -864,8 +864,9 @@ def firmware_clock_screensaver_overlay_errors(backlight_path: Path, root: Path) 
     if show_body is None:
         errors.append(f"{rel}: missing show_clock_view script")
     elif (
-        "lvgl.widget.show: clock_screensaver" not in show_body
-        or "script.execute: clock_screensaver_keep_on_top" not in show_body
+        "hide_clock_bar_top_layer_widgets(" not in show_body
+        or "lv_obj_clear_flag(id(clock_screensaver), LV_OBJ_FLAG_HIDDEN);" not in show_body
+        or "lv_obj_move_foreground(id(clock_screensaver));" not in show_body
     ):
         errors.append(f"{rel}: raise the clock screensaver above existing top-layer UI")
 
@@ -2661,8 +2662,10 @@ def run_self_test() -> int:
         "            - script.execute: show_clock_view\n"
         "  - id: show_clock_view\n"
         "    then:\n"
-        "      - lvgl.widget.show: clock_screensaver\n"
-        "      - script.execute: clock_screensaver_keep_on_top\n"
+        "      - lambda: |-\n"
+        "          hide_clock_bar_top_layer_widgets(nullptr, 0, nullptr, nullptr, nullptr);\n"
+        "          lv_obj_clear_flag(id(clock_screensaver), LV_OBJ_FLAG_HIDDEN);\n"
+        "          lv_obj_move_foreground(id(clock_screensaver));\n"
         "  - id: clock_screensaver_keep_on_top\n"
         "    then:\n"
         "      - lambda: |-\n"
@@ -2695,8 +2698,10 @@ def run_self_test() -> int:
         "            - script.execute: hide_cover_art_view\n"
         "  - id: show_clock_view\n"
         "    then:\n"
-        "      - lvgl.widget.show: clock_screensaver\n"
-        "      - script.execute: clock_screensaver_keep_on_top\n"
+        "      - lambda: |-\n"
+        "          hide_clock_bar_top_layer_widgets(nullptr, 0, nullptr, nullptr, nullptr);\n"
+        "          lv_obj_clear_flag(id(clock_screensaver), LV_OBJ_FLAG_HIDDEN);\n"
+        "          lv_obj_move_foreground(id(clock_screensaver));\n"
         "  - id: clock_screensaver_keep_on_top\n"
         "    then:\n"
         "      - lambda: |-\n"
