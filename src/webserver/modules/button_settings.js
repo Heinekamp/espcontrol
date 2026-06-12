@@ -210,7 +210,20 @@ function openClockBarTemperatureSettings() {
   panel.appendChild(degreeToggle.row);
 
   var saveRow = document.createElement("div");
-  saveRow.className = "sp-btn-row sp-btn-row--save";
+  saveRow.className = "sp-btn-row sp-btn-row--save sp-has-secondary";
+
+  var visible = clockBarItemActive("temperature");
+  var hideBtn = document.createElement("button");
+  hideBtn.type = "button";
+  hideBtn.className = "sp-action-btn sp-hide-btn";
+  hideBtn.innerHTML = '<span class="mdi mdi-' + (visible ? "eye-off-outline" : "eye-outline") + '"></span>' +
+    (visible ? "Hide" : "Show");
+  hideBtn.addEventListener("click", function () {
+    setClockBarItemVisible("temperature", !visible);
+    closeSettings();
+  });
+  saveRow.appendChild(hideBtn);
+
   var saveBtn = document.createElement("button");
   saveBtn.type = "button";
   saveBtn.className = "sp-action-btn sp-save-btn";

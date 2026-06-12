@@ -345,14 +345,14 @@ var CSS =
   "font-weight:500;cursor:pointer;font-family:inherit;" +
   "transition:background .25s,opacity .25s,box-shadow .25s}" +
   ".sp-action-btn:active{opacity:.85}" +
-  ".sp-delete-btn{background:var(--surface2);color:var(--text);display:inline-flex;align-items:center;gap:6px}" +
-  ".sp-delete-btn:hover{background:var(--border);color:var(--text)}" +
+  ".sp-delete-btn,.sp-hide-btn{background:var(--surface2);color:var(--text);display:inline-flex;align-items:center;gap:6px}" +
+  ".sp-delete-btn:hover,.sp-hide-btn:hover{background:var(--border);color:var(--text)}" +
   ".sp-save-btn{background:var(--accent);color:#fff}" +
   ".sp-save-btn:hover{background:var(--accent-hover);box-shadow:var(--shadow-1)}" +
   ".sp-edit-subpage-btn{background:var(--accent);color:#fff}" +
   ".sp-edit-subpage-btn:hover{background:var(--accent-hover);box-shadow:var(--shadow-1)}" +
   ".sp-btn-row--save{margin-top:24px;justify-content:flex-end}" +
-  ".sp-btn-row--save.sp-has-delete{justify-content:space-between}" +
+  ".sp-btn-row--save.sp-has-delete,.sp-btn-row--save.sp-has-secondary{justify-content:space-between}" +
   ".sp-btn-group-right{display:flex;gap:8px}" +
 
   ".sp-toggle-row{display:flex;align-items:center;justify-content:space-between;" +
