@@ -307,7 +307,8 @@
           "90",
           "180",
           "270"
-        ]
+        ],
+        "displayOffset": 180
       },
       "web": {
         "dragMode": "swap",

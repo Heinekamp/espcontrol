@@ -184,6 +184,12 @@ for (const [slug, device] of Object.entries(manifest.devices || {})) {
   assert.deepStrictEqual(device.rotation.options, ALL_ROTATIONS, `${slug}: normal rotation options`);
   assert.strictEqual(device.rotation.experimentalOptions, undefined, `${slug}: no hidden rotation options`);
   assertGeneratedRotationOptions(slug, featureConfig, "screenRotationOptions", ALL_ROTATIONS);
+  if (Object.prototype.hasOwnProperty.call(device.rotation, "displayOffset")) {
+    assert(
+      featureConfig.includes(`screenRotationDisplayOffset:${device.rotation.displayOffset}`),
+      `${slug}: generated web UI must include screen rotation display offset ${device.rotation.displayOffset}`
+    );
+  }
   assert(
     !featureConfig.includes("screenRotationExperimentalOptions"),
     `${slug}: generated web UI must not hide rotation options behind the dev flag`

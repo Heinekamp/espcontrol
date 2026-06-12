@@ -336,6 +336,8 @@ script:
 select:
   - platform: template
     name: "${entity_screen_rotation}"
+    internal: true
+    disabled_by_default: true
     id: screen_rotation_select
     entity_category: config
     icon: "mdi:screen-rotation"
