@@ -55,6 +55,7 @@ using lv_coord_t = int;
 using lv_style_selector_t = int;
 using lv_color_t = int;
 using lv_grid_align_t = int;
+using lv_text_align_t = int;
 static lv_disp_t lv_test_default_disp;
 static bool lv_test_disp_available = false;
 static int lv_test_hor_res = 480;
