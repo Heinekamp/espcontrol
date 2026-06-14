@@ -557,6 +557,30 @@ inline void cover_control_update_slider_handle(lv_obj_t *slider, lv_obj_t *handl
   lv_obj_move_foreground(handle);
 }
 
+inline void cover_control_update_position_handle(lv_obj_t *slider, lv_obj_t *handle,
+                                                 lv_coord_t fill_h) {
+  if (!slider || !handle) return;
+  lv_coord_t width = lv_obj_get_width(slider);
+  lv_coord_t height = lv_obj_get_height(slider);
+  if (width <= 0 || height <= 0) return;
+  lv_coord_t handle_w = width * 3 / 5;
+  if (handle_w < 20) handle_w = 20;
+  if (handle_w > width - 12) handle_w = width - 12;
+  if (handle_w < 8) handle_w = 8;
+  lv_coord_t handle_h = height / 70;
+  if (handle_h < 5) handle_h = 5;
+  if (handle_h > 8) handle_h = 8;
+  lv_coord_t inset = cover_control_slider_handle_inset(slider);
+  lv_coord_t y = fill_h - inset - handle_h;
+  if (y < inset) y = inset;
+  if (y > height - inset - handle_h) y = height - inset - handle_h;
+  if (y > height - handle_h) y = height - handle_h;
+  lv_obj_set_size(handle, handle_w, handle_h);
+  lv_obj_set_style_radius(handle, handle_h / 2, LV_PART_MAIN);
+  lv_obj_align(handle, LV_ALIGN_TOP_MID, 0, y);
+  lv_obj_move_foreground(handle);
+}
+
 inline void cover_control_layout_slider(lv_obj_t *slider, lv_coord_t width,
                                         lv_coord_t height, lv_coord_t center_y) {
   if (!slider) return;
@@ -587,7 +611,7 @@ inline void cover_control_update_position_fill(int position_pct) {
   lv_obj_set_style_radius(ui.position_fill, 0, LV_PART_MAIN);
   lv_obj_align(ui.position_fill, LV_ALIGN_TOP_MID, 0, 0);
   lv_obj_move_foreground(ui.position_fill);
-  cover_control_update_slider_handle(ui.position_slider, ui.position_handle, position_pct);
+  cover_control_update_position_handle(ui.position_slider, ui.position_handle, fill_h);
 }
 
 inline void cover_control_layout_modal(CoverControlCtx *ctx) {
