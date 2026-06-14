@@ -526,6 +526,14 @@ inline lv_obj_t *cover_control_create_slider_handle(lv_obj_t *slider) {
   return handle;
 }
 
+inline lv_coord_t cover_control_slider_handle_inset(lv_obj_t *slider) {
+  if (!slider) return 18;
+  lv_coord_t inset = lv_obj_get_style_radius(slider, LV_PART_MAIN) * 3 / 4;
+  if (inset < 16) inset = 16;
+  if (inset > 28) inset = 28;
+  return inset;
+}
+
 inline void cover_control_update_slider_handle(lv_obj_t *slider, lv_obj_t *handle, int pct) {
   if (!slider || !handle) return;
   lv_coord_t width = lv_obj_get_width(slider);
@@ -538,9 +546,10 @@ inline void cover_control_update_slider_handle(lv_obj_t *slider, lv_obj_t *handl
   lv_coord_t handle_h = height / 70;
   if (handle_h < 5) handle_h = 5;
   if (handle_h > 8) handle_h = 8;
-  lv_coord_t y = (lv_coord_t)((int32_t) height * (100 - slider_clamp_pct(pct)) / 100);
-  y -= handle_h / 2;
-  if (y < 0) y = 0;
+  lv_coord_t inset = cover_control_slider_handle_inset(slider);
+  lv_coord_t travel = height - inset * 2 - handle_h;
+  if (travel < 0) travel = 0;
+  lv_coord_t y = inset + (lv_coord_t)((int32_t) travel * (100 - slider_clamp_pct(pct)) / 100);
   if (y > height - handle_h) y = height - handle_h;
   lv_obj_set_size(handle, handle_w, handle_h);
   lv_obj_set_style_radius(handle, handle_h / 2, LV_PART_MAIN);
@@ -571,6 +580,9 @@ inline void cover_control_update_position_fill(int position_pct) {
   lv_coord_t height = lv_obj_get_height(ui.position_slider);
   if (width <= 0 || height <= 0) return;
   lv_coord_t fill_h = (lv_coord_t)((int32_t) height * fill_pct / 100);
+  lv_coord_t min_handle_cap = cover_control_slider_handle_inset(ui.position_slider) * 2 + 8;
+  if (fill_h < min_handle_cap) fill_h = min_handle_cap;
+  if (fill_h > height) fill_h = height;
   lv_obj_set_size(ui.position_fill, width, fill_h);
   lv_obj_set_style_radius(ui.position_fill, 0, LV_PART_MAIN);
   lv_obj_align(ui.position_fill, LV_ALIGN_TOP_MID, 0, 0);
