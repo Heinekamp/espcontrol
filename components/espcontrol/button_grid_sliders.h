@@ -334,6 +334,7 @@ struct CoverControlCtx {
   std::string friendly_name;
   int current_position = 0;
   int current_tilt = 0;
+  bool current_position_known = false;
   uint32_t accent_color = DEFAULT_SLIDER_COLOR;
   uint32_t secondary_color = DEFAULT_OFF_COLOR;
   lv_obj_t *btn = nullptr;
@@ -388,10 +389,14 @@ inline void cover_control_apply_card_visual(CoverControlCtx *ctx,
                                             const std::string &state_text = "") {
   if (!ctx || !ctx->btn) return;
   apply_control_availability(ctx->btn, ctx->btn, ctx->available);
-  bool active = !state_text.empty() ? cover_toggle_state_is_active(state_text) : ctx->current_position > 0;
+  bool active = ctx->current_position_known
+    ? slider_clamp_pct(ctx->current_position) < 100
+    : (!state_text.empty() ? cover_toggle_state_is_active(state_text) : ctx->current_position < 100);
   set_card_checked_state(ctx->btn, ctx->available && active);
   if (ctx->icon_lbl) {
-    bool open_icon = !state_text.empty() ? garage_state_uses_open_icon(state_text) : ctx->current_position > 0;
+    bool open_icon = ctx->current_position_known
+      ? slider_clamp_pct(ctx->current_position) == 100
+      : (!state_text.empty() ? garage_state_uses_open_icon(state_text) : ctx->current_position == 100);
     lv_label_set_text(ctx->icon_lbl, open_icon ? ctx->icon_open_glyph : ctx->icon_closed_glyph);
   }
   if (ctx->label_lbl) {
@@ -877,6 +882,7 @@ inline void cover_control_open_modal(CoverControlCtx *ctx) {
     if (!ui.active || ui.active->updating_position) return;
     ui.active->dragging_position = true;
     lv_obj_t *slider = static_cast<lv_obj_t *>(lv_event_get_target(e));
+    ui.active->current_position_known = true;
     ui.active->current_position = lv_slider_get_value(slider);
     cover_control_update_position_fill(ui.active->current_position);
     cover_control_apply_card_visual(ui.active);
@@ -888,6 +894,7 @@ inline void cover_control_open_modal(CoverControlCtx *ctx) {
     if (!ui.active->available) return;
     lv_obj_t *slider = static_cast<lv_obj_t *>(lv_event_get_target(e));
     int pct = lv_slider_get_value(slider);
+    ui.active->current_position_known = true;
     ui.active->current_position = pct;
     send_slider_action(ui.active->entity_id, pct, false);
   }, LV_EVENT_RELEASED, nullptr);
@@ -984,6 +991,7 @@ inline void subscribe_cover_control_state(CoverControlCtx *ctx) {
       [ctx](esphome::StringRef val) {
         int pct = 0;
         if (!slider_parse_pct(val, pct)) return;
+        ctx->current_position_known = true;
         ctx->current_position = pct;
         cover_control_set_position_value(ctx, pct);
         cover_control_apply_card_visual(ctx);
