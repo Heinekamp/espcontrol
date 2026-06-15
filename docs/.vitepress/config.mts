@@ -375,8 +375,8 @@ export default defineConfig({
         items: [
           { text: 'Overview', link: '/' },
           { text: 'Install', link: '/getting-started/install' },
-          { text: 'Manual Setup', link: '/getting-started/manual-esphome-setup' },
           { text: 'Enable Actions', link: '/getting-started/home-assistant-actions' },
+          { text: 'Manual Setup', link: '/getting-started/manual-esphome-setup' },
           { text: 'Troubleshooting', link: '/getting-started/troubleshooting' },
         ],
       },
