@@ -378,7 +378,6 @@ export default defineConfig({
           { text: 'Manual ESPHome Setup', link: '/getting-started/manual-esphome-setup' },
           { text: 'Enable Actions', link: '/getting-started/home-assistant-actions' },
           { text: '3D Printable Stands', link: '/reference/3d-printable-stands' },
-          { text: 'Collect USB Logs', link: '/getting-started/collect-usb-logs' },
           { text: 'Troubleshooting', link: '/getting-started/troubleshooting' },
         ],
       },
@@ -455,6 +454,7 @@ export default defineConfig({
         text: 'Reference',
         items: [
           { text: 'Contributing', link: '/reference/contributing' },
+          { text: 'Collect USB Logs', link: '/reference/collect-usb-logs' },
           { text: 'Icon Reference', link: '/reference/icons' },
           { text: 'Language Support', link: '/reference/language-support' },
           { text: 'Request Device Support', link: '/reference/request-device-support' },
