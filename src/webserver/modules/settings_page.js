@@ -699,7 +699,7 @@ function buildSettingsPage(parent) {
     });
     coverArtDelaySelect.addEventListener("change", function () {
       state.coverArtDelay = parseFloat(this.value) || 0;
-      postNumber(entityName("screen_saver_cover_art_delay"), state.coverArtDelay);
+      postCoverArtDelay(state.coverArtDelay);
     });
     coverArtDelayField.appendChild(coverArtDelaySelect);
     coverArtOnlyOptions.appendChild(coverArtDelayField);
@@ -730,7 +730,7 @@ function buildSettingsPage(parent) {
       });
       trackOverlaySelect.addEventListener("change", function () {
         state.coverArtTrackOverlayDuration = parseFloat(this.value) || 0;
-        postNumber(entityName("screen_saver_track_overlay_duration"), state.coverArtTrackOverlayDuration);
+        postCoverArtTrackOverlayDuration(state.coverArtTrackOverlayDuration);
       });
       trackOverlayField.appendChild(trackOverlaySelect);
       coverArtOnlyOptions.appendChild(trackOverlayField);
