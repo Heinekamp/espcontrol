@@ -165,10 +165,7 @@ void ArtworkImage::release() {
   this->pending_url_.clear();
   this->end_connection_();
   this->retire_active_buffer_();
-  this->cleanup_retired_buffers_(false);
-  if (!this->retired_buffers_.empty()) {
-    this->enable_loop();
-  }
+  this->cleanup_retired_buffers_(true);
 }
 
 size_t ArtworkImage::resize_(int width_in, int height_in) {
