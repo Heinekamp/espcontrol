@@ -1863,6 +1863,12 @@ inline void grid_phase2(
             display_icon_font(display),
             display_main_width_percent(display));
           subscribe_light_control_state(ctx);
+          lv_obj_add_event_cb(sb_btn, [](lv_event_t *e) {
+            lv_obj_t *target = static_cast<lv_obj_t *>(lv_event_get_target(e));
+            if (target && lv_obj_has_state(target, LV_STATE_DISABLED)) return;
+            LightControlCtx *ctx = (LightControlCtx *)lv_event_get_user_data(e);
+            if (ctx) light_control_open_modal(ctx);
+          }, LV_EVENT_CLICKED, ctx);
         }
         continue;
       }
