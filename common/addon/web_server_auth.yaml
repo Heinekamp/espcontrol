@@ -5,6 +5,10 @@
 # built-in web page with credentials supplied by the user's substitutions.
 # =============================================================================
 
+substitutions:
+  espcontrol_web_username: ""
+  espcontrol_web_password: ""
+
 web_server:
   auth:
     username: ${espcontrol_web_username}
