@@ -619,6 +619,7 @@ inline void reset_image_card_pool(const GridConfig &cfg) {
   int count = cfg.image_card_image_count;
   if (count > IMAGE_CARD_MAX_CONTEXTS) count = IMAGE_CARD_MAX_CONTEXTS;
   for (int i = 0; i < count; i++) {
+    image_card_clear_widget_source(contexts[i].widget);
     contexts[i].active = false;
     contexts[i].widget = nullptr;
     contexts[i].btn = nullptr;
