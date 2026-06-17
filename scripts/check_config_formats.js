@@ -267,6 +267,11 @@ assert.deepStrictEqual(
   buttonShape(hooks.cardContractDefaultConfig("sensor")),
   "sensor card type default is spec-backed"
 );
+assert.deepStrictEqual(
+  Array.from(hooks.cardContractCardKeys()).filter((type) => hooks.cardContractExperimental(type)),
+  [],
+  "no card types are hidden behind developer features"
+);
 function assertButtonTypeSpecBacked(type, description) {
   const spec = hooks.buttonTypeRuntimeSpec(type);
   assert(spec, `${description} runtime spec exists`);
@@ -1729,9 +1734,9 @@ assertButtonMigration(hooks, "fan card clears ignored fields", "fan.bedroom;Bedr
   type: "fan_direction",
 });
 
-assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("fan_speed", false, false), false, "fan picker hidden without experimental flag");
-assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("fan_speed", true, false), true, "fan picker visible with experimental flag");
-assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("fan_speed", true, true), true, "fan picker visible in subpages with experimental flag");
+assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("fan_speed", false, false), true, "fan picker visible without developer features");
+assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("fan_speed", true, false), true, "fan picker visible with developer features");
+assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("fan_speed", true, true), true, "fan picker visible in subpages with developer features");
 assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("image", false, false), true, "image picker visible without experimental flag");
 assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("image", true, false), true, "image picker visible with experimental flag");
 assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("image", true, true), true, "image picker visible in subpages with experimental flag");
@@ -1870,7 +1875,7 @@ assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("fan_preset", 
 assert.strictEqual(
   hooks.buttonTypePickerKeysForExperimental(false, false, "fan_speed").indexOf("fan_speed") >= 0,
   true,
-  "saved fan type remains selectable while hidden");
+  "fan type remains selectable without developer features");
 assert.strictEqual(hooks.buttonTypeRuntimeSpec("todo"), null, "todo card type is removed from the webserver");
 assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("todo", false, false), false, "todo picker is removed");
 assert.deepStrictEqual(Array.from(hooks.cardContractDomains("todo")), [], "todo card has no webserver entity contract");

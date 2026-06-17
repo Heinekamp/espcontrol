@@ -339,7 +339,7 @@ assert.deepStrictEqual(Array.from(hooks.alarmVisibleActions(hooks.parseButtonCon
 assert.deepStrictEqual(Array.from(hooks.alarmVisibleActions(hooks.parseButtonConfig(
   "alarm_control_panel.house;House;Security;Auto;;;alarm;;actions=away%7Chome%7Cnight%7Cvacation%7Cdisarm"
 ))), ["away", "home", "night"]);
-assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("fan_speed", false, false), false);
+assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("fan_speed", false, false), true);
 assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("fan_speed", true, false), true);
 assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("fan_speed", true, true), true);
 assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("fan_switch", true, false), false);
@@ -351,7 +351,7 @@ assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("todo", true, 
 assert.strictEqual(hooks.buttonTypeVisibleInPickerForExperimental("todo", true, true), false);
 assert(
   hooks.buttonTypePickerKeysForExperimental(false, false, "fan_speed").includes("fan_speed"),
-  "saved fan cards remain represented while hidden"
+  "fan cards are available without developer features"
 );
 assert(!hooks.buttonTypeRuntimeSpec("todo"), "todo card type is not registered");
 
