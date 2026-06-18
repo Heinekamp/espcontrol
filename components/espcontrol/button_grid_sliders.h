@@ -156,6 +156,28 @@ enum class LightControlTab : uint8_t {
   COLOR = 3,
 };
 
+struct LightControlVisibleTabs {
+  LightControlTab tabs[4] = {
+    LightControlTab::POWER,
+    LightControlTab::BRIGHTNESS,
+    LightControlTab::TEMPERATURE,
+    LightControlTab::COLOR,
+  };
+  uint8_t count = 0;
+
+  bool contains(LightControlTab tab) const {
+    for (uint8_t i = 0; i < count; i++) {
+      if (tabs[i] == tab) return true;
+    }
+    return false;
+  }
+
+  void add(LightControlTab tab) {
+    if (count >= 4 || contains(tab)) return;
+    tabs[count++] = tab;
+  }
+};
+
 struct LightColorPresetClick {
   uint32_t color = 0;
 };
@@ -192,34 +214,52 @@ inline LightControlModalUi &light_control_modal_ui() {
   return ui;
 }
 
-inline LightControlTab light_control_tab_from_token(const std::string &value) {
-  if (value == "brightness") return LightControlTab::BRIGHTNESS;
-  if (value == "temperature") return LightControlTab::TEMPERATURE;
-  if (value == "color") return LightControlTab::COLOR;
-  return LightControlTab::POWER;
+inline bool light_control_tab_from_token(const std::string &value, LightControlTab &tab) {
+  if (value == "power") {
+    tab = LightControlTab::POWER;
+    return true;
+  }
+  if (value == "brightness") {
+    tab = LightControlTab::BRIGHTNESS;
+    return true;
+  }
+  if (value == "temperature") {
+    tab = LightControlTab::TEMPERATURE;
+    return true;
+  }
+  if (value == "color") {
+    tab = LightControlTab::COLOR;
+    return true;
+  }
+  return false;
 }
 
-inline std::vector<LightControlTab> light_control_visible_tabs(LightControlCtx *ctx) {
-  std::vector<LightControlTab> tabs;
-  std::string value = normalize_light_control_tabs_value(
-    cfg_option_value(ctx ? ctx->options : "", LIGHT_CONTROL_TABS_OPTION));
-  std::vector<std::string> parts = split_config_fields(value, '|');
-  for (const auto &part : parts) {
-    LightControlTab tab = light_control_tab_from_token(part);
-    if (std::find(tabs.begin(), tabs.end(), tab) == tabs.end()) tabs.push_back(tab);
+inline LightControlVisibleTabs light_control_visible_tabs(LightControlCtx *ctx) {
+  LightControlVisibleTabs visible;
+  std::string value = cfg_option_value(ctx ? ctx->options : "", LIGHT_CONTROL_TABS_OPTION);
+  if (value.empty()) value = LIGHT_CONTROL_DEFAULT_TABS_VALUE;
+
+  size_t start = 0;
+  while (start <= value.size()) {
+    size_t end = value.find('|', start);
+    std::string token = value.substr(start, end == std::string::npos ? std::string::npos : end - start);
+    LightControlTab tab = LightControlTab::POWER;
+    if (light_control_tab_from_token(token, tab)) visible.add(tab);
+    if (end == std::string::npos) break;
+    start = end + 1;
   }
-  if (tabs.empty()) tabs.push_back(LightControlTab::POWER);
-  return tabs;
+  if (visible.count == 0) visible.add(LightControlTab::POWER);
+  return visible;
 }
 
 inline bool light_control_tab_visible(LightControlCtx *ctx, LightControlTab tab) {
-  std::vector<LightControlTab> tabs = light_control_visible_tabs(ctx);
-  return std::find(tabs.begin(), tabs.end(), tab) != tabs.end();
+  LightControlVisibleTabs tabs = light_control_visible_tabs(ctx);
+  return tabs.contains(tab);
 }
 
 inline LightControlTab light_control_first_visible_tab(LightControlCtx *ctx) {
-  std::vector<LightControlTab> tabs = light_control_visible_tabs(ctx);
-  return tabs.empty() ? LightControlTab::POWER : tabs.front();
+  LightControlVisibleTabs tabs = light_control_visible_tabs(ctx);
+  return tabs.count == 0 ? LightControlTab::POWER : tabs.tabs[0];
 }
 
 inline void light_control_ensure_visible_tab(LightControlCtx *ctx) {
@@ -376,25 +416,26 @@ inline void light_control_apply_tab_visibility() {
   LightControlModalUi &ui = light_control_modal_ui();
   LightControlCtx *ctx = ui.active;
   if (!ctx) return;
-  light_control_ensure_visible_tab(ctx);
+  LightControlVisibleTabs visible_tabs = light_control_visible_tabs(ctx);
+  if (!visible_tabs.contains(ui.tab)) ui.tab = visible_tabs.tabs[0];
   bool show_power = ui.tab == LightControlTab::POWER;
   bool show_brightness = ui.tab == LightControlTab::BRIGHTNESS;
   bool show_temperature = ui.tab == LightControlTab::TEMPERATURE;
   bool show_color = ui.tab == LightControlTab::COLOR;
   if (ui.power_tab) {
-    if (light_control_tab_visible(ctx, LightControlTab::POWER)) lv_obj_clear_flag(ui.power_tab, LV_OBJ_FLAG_HIDDEN);
+    if (visible_tabs.contains(LightControlTab::POWER)) lv_obj_clear_flag(ui.power_tab, LV_OBJ_FLAG_HIDDEN);
     else lv_obj_add_flag(ui.power_tab, LV_OBJ_FLAG_HIDDEN);
   }
   if (ui.brightness_tab) {
-    if (light_control_tab_visible(ctx, LightControlTab::BRIGHTNESS)) lv_obj_clear_flag(ui.brightness_tab, LV_OBJ_FLAG_HIDDEN);
+    if (visible_tabs.contains(LightControlTab::BRIGHTNESS)) lv_obj_clear_flag(ui.brightness_tab, LV_OBJ_FLAG_HIDDEN);
     else lv_obj_add_flag(ui.brightness_tab, LV_OBJ_FLAG_HIDDEN);
   }
   if (ui.temperature_tab) {
-    if (light_control_tab_visible(ctx, LightControlTab::TEMPERATURE)) lv_obj_clear_flag(ui.temperature_tab, LV_OBJ_FLAG_HIDDEN);
+    if (visible_tabs.contains(LightControlTab::TEMPERATURE)) lv_obj_clear_flag(ui.temperature_tab, LV_OBJ_FLAG_HIDDEN);
     else lv_obj_add_flag(ui.temperature_tab, LV_OBJ_FLAG_HIDDEN);
   }
   if (ui.color_tab) {
-    if (light_control_tab_visible(ctx, LightControlTab::COLOR)) lv_obj_clear_flag(ui.color_tab, LV_OBJ_FLAG_HIDDEN);
+    if (visible_tabs.contains(LightControlTab::COLOR)) lv_obj_clear_flag(ui.color_tab, LV_OBJ_FLAG_HIDDEN);
     else lv_obj_add_flag(ui.color_tab, LV_OBJ_FLAG_HIDDEN);
   }
   if (ui.power_group) {
@@ -654,10 +695,10 @@ inline void light_control_layout_modal(LightControlCtx *ctx) {
   LightControlModalUi &ui = light_control_modal_ui();
   if (!ctx || !ui.panel) return;
   light_control_ensure_visible_tab(ctx);
-  std::vector<LightControlTab> visible_tabs = light_control_visible_tabs(ctx);
+  LightControlVisibleTabs visible_tabs = light_control_visible_tabs(ctx);
   ControlModalLayout layout = control_modal_calc_layout(ctx->width_compensation_percent);
 
-  int tab_count = static_cast<int>(visible_tabs.size());
+  int tab_count = static_cast<int>(visible_tabs.count);
   if (tab_count < 1) tab_count = 1;
   lv_coord_t tab_frame_w = layout.panel_w - layout.inset * 3;
   if (tab_frame_w < layout.panel_w / 2) tab_frame_w = layout.panel_w / 2;
@@ -681,9 +722,9 @@ inline void light_control_layout_modal(LightControlCtx *ctx) {
   }
   lv_coord_t first_tab_x = (tab_frame_w - tabs_total_w) / 2;
   for (int i = 0; i < tab_count; i++) {
-    lv_obj_t *tab_btn = light_control_tab_button(ui, visible_tabs[i]);
+    lv_obj_t *tab_btn = light_control_tab_button(ui, visible_tabs.tabs[i]);
     if (!tab_btn) continue;
-    bool active = (visible_tabs[i] == ui.tab);
+    bool active = (visible_tabs.tabs[i] == ui.tab);
     lv_obj_set_size(tab_btn, tab_w, tab_h);
     lv_obj_set_style_radius(tab_btn, tab_h / 2, LV_PART_MAIN);
     lv_coord_t tab_x = first_tab_x + i * (tab_w + tab_gap);
