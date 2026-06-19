@@ -465,6 +465,9 @@ inline void light_control_layout_modal(LightControlCtx *ctx);
 
 inline void light_control_center_icon_label(lv_obj_t *label) {
   if (!label) return;
+  lv_obj_update_layout(label);
+  lv_obj_set_style_transform_pivot_x(label, lv_obj_get_width(label) / 2, LV_PART_MAIN);
+  lv_obj_set_style_transform_pivot_y(label, lv_obj_get_height(label) / 2, LV_PART_MAIN);
   lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
 }
 
