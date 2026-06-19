@@ -1425,7 +1425,8 @@ inline void grid_phase2(
     }, LV_EVENT_CLICKED, main_page_obj);
     screen_lock_register_controlled_button(back_btn);
 
-    auto add_parent_indicator = [&](const std::string &entity_id) {
+    auto add_parent_indicator = [&](const std::string &entity_id,
+                                    bool (*is_active_state)(esphome::StringRef) = is_entity_on_ref) {
       if (!sp_indicator || entity_id.empty()) return;
       lv_obj_t *parent_btn = slots[si].btn;
       lv_obj_t *parent_icon = slots[si].icon_lbl;
@@ -1439,7 +1440,7 @@ inline void grid_phase2(
       subscribe_subpage_parent_indicator(
         entity_id, parent_btn, parent_icon, parent_idx,
         &sp_child_was_on[cwi], sp_has_icon_on,
-        sp_icon_off_glyph, sp_icon_on_glyph, sp_on_count);
+        sp_icon_off_glyph, sp_icon_on_glyph, sp_on_count, is_active_state);
     };
 
     auto add_subpage_toggle_click = [&](lv_obj_t *btn, const std::string &entity_id, bool set_checked) {
@@ -1748,7 +1749,7 @@ inline void grid_phase2(
           } else {
             subscribe_control_availability(sub_slot.btn, sub_slot.btn, sb_cfg.entity);
           }
-          add_parent_indicator(sb_cfg.entity);
+          add_parent_indicator(sb_cfg.entity, lawn_mower_state_active_ref);
           if (!lawn_mower_card_read_only(sb_cfg)) {
             lv_obj_add_event_cb(sb_btn, [](lv_event_t *e) {
               LawnMowerCardCtx *ctx = (LawnMowerCardCtx *)lv_event_get_user_data(e);

@@ -57,6 +57,11 @@ inline std::string lawn_mower_state_label(const std::string &state,
   return fallback;
 }
 
+inline bool lawn_mower_state_active_ref(esphome::StringRef state) {
+  std::string value = normalized_state_text(state);
+  return value == "mowing" || value == "returning";
+}
+
 inline const char *lawn_mower_card_icon(const ParsedCfg &p) {
   return (!p.icon.empty() && p.icon != "Auto")
     ? find_icon(p.icon.c_str())
