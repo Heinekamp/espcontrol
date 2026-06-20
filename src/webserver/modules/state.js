@@ -91,6 +91,7 @@ var state = {
   coverArtDelay: 10,
   coverArtTrackOverlayDuration: 5,
   coverArtHideExternalInputOn: true,
+  homeAssistantArtworkProtocol: "http",
   coverArtHomeAssistantPort: 8123,
   screensaverMode: "disabled",
   _screensaverModeReceived: false,
@@ -620,6 +621,11 @@ function normalizeHomeAssistantArtworkPort(value) {
   if (port < 1) return 1;
   if (port > 65535) return 65535;
   return port;
+}
+
+function normalizeHomeAssistantArtworkProtocol(value) {
+  value = String(value == null ? "" : value).trim().toLowerCase();
+  return value === "https" ? "https" : "http";
 }
 
 function setSelectValue(select, value, label) {

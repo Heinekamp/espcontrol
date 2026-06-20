@@ -1,6 +1,7 @@
 #pragma once
 
 // Internal implementation detail for button_grid.h. Include button_grid.h from device YAML.
+#include "esphome/core/defines.h"
 #ifdef USE_SENSOR
 #include "esphome/components/sensor/sensor.h"
 #endif
