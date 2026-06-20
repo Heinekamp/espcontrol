@@ -26,8 +26,8 @@ function actionCardIsOptionSelect(b) {
 }
 
 function actionCardIsLocal(b) {
-  var value = typeof b === "string" ? b : b && b.sensor;
-  return value === ACTION_CARD_LOCAL_ACTION;
+  if (typeof b === "string") return b === ACTION_CARD_LOCAL_ACTION;
+  return !!(b && (b.type === "action" || b.type === "local") && b.sensor === ACTION_CARD_LOCAL_ACTION);
 }
 
 function normalizeActionCardConfig(b) {

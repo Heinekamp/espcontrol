@@ -15,6 +15,7 @@ var SSE_ALIAS_GROUPS = {
   coverArtDelay: ["number-screen_saver__cover_art_delay", "number-screen_saver_cover_art_delay", "number-cover_art_delay"],
   trackOverlayDuration: ["number-screen_saver__track_overlay_duration", "number-screen_saver_track_overlay_duration", "number-track_overlay_duration", "number-screen_saver__show_track_overlay"],
   coverArtHideExternalInput: ["switch-screen_saver__hide_cover_art_on_external_input", "switch-screen_saver_hide_cover_art_on_external_input", "switch-hide_cover_art_on_external_input", "switch-cover_art_hide_external_input", "switch-screen_saver__hide_for_external_sources"],
+  homeAssistantArtworkProtocol: ["select-home_assistant_artwork_protocol", "select-cover_art_home_assistant_artwork_protocol"],
   homeAssistantArtworkPort: ["number-home_assistant_artwork_port"],
   scheduleTrigger: ["text-screen__schedule_trigger", "text-screen_schedule_trigger", "text-schedule_trigger"],
   scheduleWakeTimeout: ["number-screen__schedule_wake_timeout", "number-screen_schedule_wake_timeout", "number-schedule_wake_timeout"],
@@ -23,6 +24,7 @@ var SSE_ALIAS_GROUPS = {
   scheduleClockBrightness: ["number-screen__schedule_clock_brightness", "number-screen_schedule_clock_brightness", "number-schedule_clock_brightness"],
   scheduleClockTextColor: ["text-screen__schedule_clock_text_color", "text-screen_schedule_clock_text_color", "text-schedule_clock_text_color"],
   screenTheme: ["select-screen__theme", "select-screen_theme"],
+  screenActiveTimezone: ["text_sensor-screen__active_timezone", "text_sensor-screen_active_timezone", "text_sensor:Screen: Active Timezone"],
   screenLanguage: ["select-screen__language", "select-screen_language"],
   ntpServer1: ["text-screen__ntp_server_1", "text-ntp_server_1"],
   ntpServer2: ["text-screen__ntp_server_2", "text-ntp_server_2"],
@@ -265,6 +267,10 @@ function connectEvents() {
       state.coverArtTrackOverlayDuration = parseFloat(val) || 0;
       syncCoverArtScreensaverUi();
     },
+    "select-home_assistant_artwork_protocol": function (val, d) {
+      state.homeAssistantArtworkProtocol = normalizeHomeAssistantArtworkProtocol(d.value || val);
+      syncCoverArtScreensaverUi();
+    },
     "number-home_assistant_artwork_port": function (val) {
       state.coverArtHomeAssistantPort = normalizeHomeAssistantArtworkPort(val);
       syncCoverArtScreensaverUi();
@@ -362,6 +368,14 @@ function connectEvents() {
         renderPreview();
       }
       updateClock();
+    },
+    "text_sensor-screen__active_timezone": function (val, d) {
+      state.activeTimezone = d.value || val || FALLBACK_TIMEZONE_OPTION;
+      if (isHomeAssistantAutoTimezone(state.timezone)) {
+        if (normalizeTemperatureUnit(state.temperatureUnit) === "Auto") updateTempPreview();
+        renderPreview();
+        updateClock();
+      }
     },
     "select-screen__language": function (val, d) {
       state.language = normalizeLanguage(d.value || val || state.language);
@@ -473,6 +487,7 @@ function connectEvents() {
   addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.coverArtDelay, sseHandlers["number-screen_saver__cover_art_delay"]);
   addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.trackOverlayDuration, sseHandlers["number-screen_saver__track_overlay_duration"]);
   addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.coverArtHideExternalInput, sseHandlers["switch-screen_saver__hide_cover_art_on_external_input"]);
+  addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.homeAssistantArtworkProtocol, sseHandlers["select-home_assistant_artwork_protocol"]);
   addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.homeAssistantArtworkPort, sseHandlers["number-home_assistant_artwork_port"]);
   addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.scheduleTrigger, sseHandlers["text-screen__schedule_trigger"]);
   addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.scheduleWakeTimeout, sseHandlers["number-screen__schedule_wake_timeout"]);
@@ -481,6 +496,7 @@ function connectEvents() {
   addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.scheduleClockBrightness, sseHandlers["number-screen__schedule_clock_brightness"]);
   addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.scheduleClockTextColor, sseHandlers["text-screen__schedule_clock_text_color"]);
   addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.screenTheme, sseHandlers["select-screen__theme"]);
+  addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.screenActiveTimezone, sseHandlers["text_sensor-screen__active_timezone"]);
   addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.screenLanguage, sseHandlers["select-screen__language"]);
   addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.ntpServer1, sseHandlers["text-screen__ntp_server_1"]);
   addSseAliases(sseHandlers, SSE_ALIAS_GROUPS.ntpServer2, sseHandlers["text-screen__ntp_server_2"]);

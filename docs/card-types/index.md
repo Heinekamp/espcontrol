@@ -21,7 +21,7 @@ Use this page when you know what you want the panel to do but are not sure which
 | Pick from a Home Assistant select list | [Option Select](/card-types/option-select) | `select` or `input_select` |
 | Fire a custom Home Assistant automation event | [Trigger](/card-types/buttons) | No entity required |
 | Call an HTTP URL directly from the panel | [Webhook](/card-types/webhooks) | URL |
-| Show a live number, text state, or active/inactive icon | [Sensor](/card-types/sensors) | `sensor`, `binary_sensor`, or `text_sensor` |
+| Show a live number, text state, or active/inactive icon | [Sensor](/card-types/sensors) | Home Assistant `sensor`, `binary_sensor`, or `text_sensor`; or a Local Sensor source |
 | Show a door or window contact sensor | [Doors & Windows](/card-types/doors-windows) | `binary_sensor` or `sensor` |
 | Show presence, motion, person, or tracker state | [Presence](/card-types/presence) | `binary_sensor`, `sensor`, `text_sensor`, `person`, or tracker helpers |
 | Drag to set light brightness or fan speed | [Slider](/card-types/sliders) | `light` or `fan` |
@@ -47,6 +47,7 @@ Most cards use Home Assistant entities. The entity ID is the exact name Home Ass
 Some cards do not need a Home Assistant entity:
 
 - **Trigger** sends a custom event that Home Assistant automations can listen for.
+- **Local Sensor** shows a value supplied by the panel firmware.
 - **Webhook** sends a direct HTTP request.
 - **Action > Local Action** runs a registered callback on the panel itself.
 - **Date & Time**, **World Clock**, **Screen Lock**, and **Subpage** can work from the panel itself.

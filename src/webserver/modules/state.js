@@ -1,5 +1,7 @@
 // ── State ──────────────────────────────────────────────────────────────
 
+var AUTO_TIMEZONE_OPTION = "Auto (Home Assistant)";
+var FALLBACK_TIMEZONE_OPTION = "UTC (GMT+0)";
 var NTP_SERVER_DEFAULTS = ["0.pool.ntp.org", "1.pool.ntp.org", "2.pool.ntp.org"];
 var LANGUAGE_LABELS = {
   cs: "Čeština (Czech)",
@@ -41,12 +43,27 @@ function epaperPreviewFillColor() {
 }
 
 function defaultTimezoneOptions() {
-  return (CFG && Array.isArray(CFG.timezoneOptions)) ? CFG.timezoneOptions.slice() : [];
+  var options = (CFG && Array.isArray(CFG.timezoneOptions)) ? CFG.timezoneOptions.slice() : [];
+  return options;
+}
+
+function isHomeAssistantAutoTimezone(value) {
+  return String(value || "") === AUTO_TIMEZONE_OPTION;
+}
+
+function effectiveTimezoneOptionForWeb(value) {
+  if (!isHomeAssistantAutoTimezone(value)) return value;
+  var active = String(state && state.activeTimezone || "").trim();
+  return active && !isHomeAssistantAutoTimezone(active) ? active : FALLBACK_TIMEZONE_OPTION;
 }
 
 function timezoneOptionsWithFallback(options, selected) {
   var list = Array.isArray(options) && options.length ? options.slice() : defaultTimezoneOptions();
-  if (selected && list.indexOf(selected) === -1) list.unshift(selected);
+  var supportsAuto = list.indexOf(AUTO_TIMEZONE_OPTION) !== -1;
+  if (selected && list.indexOf(selected) === -1 &&
+      (!isHomeAssistantAutoTimezone(selected) || supportsAuto)) {
+    list.unshift(selected);
+  }
   return list;
 }
 
@@ -91,6 +108,7 @@ var state = {
   coverArtDelay: 10,
   coverArtTrackOverlayDuration: 5,
   coverArtHideExternalInputOn: true,
+  homeAssistantArtworkProtocol: "http",
   coverArtHomeAssistantPort: 8123,
   screensaverMode: "disabled",
   _screensaverModeReceived: false,
@@ -122,7 +140,8 @@ var state = {
   scheduleDimmedBrightness: 10,
   scheduleClockBrightness: 10,
   scheduleClockTextColor: "FFFFFF",
-  timezone: "UTC (GMT+0)",
+  timezone: AUTO_TIMEZONE_OPTION,
+  activeTimezone: FALLBACK_TIMEZONE_OPTION,
   timezoneOptions: defaultTimezoneOptions(),
   language: "en",
   languageOptions: ["en", "cs", "da", "de", "es", "fi", "fr", "hu", "it", "nb", "nl", "pl", "pt", "pt-br", "ro", "sk", "sl", "sv", "tr", "uk"],
@@ -289,7 +308,7 @@ function syncLanguageSelect() {
 }
 
 function timezonePrefersFahrenheit(timezone) {
-  var tz = getTzId(timezone || state.timezone);
+  var tz = getTzId(effectiveTimezoneOptionForWeb(timezone || state.timezone));
   var fahrenheitZones = {
     "America/Adak": true,
     "America/Anchorage": true,
@@ -620,6 +639,11 @@ function normalizeHomeAssistantArtworkPort(value) {
   if (port < 1) return 1;
   if (port > 65535) return 65535;
   return port;
+}
+
+function normalizeHomeAssistantArtworkProtocol(value) {
+  value = String(value == null ? "" : value).trim().toLowerCase();
+  return value === "https" ? "https" : "http";
 }
 
 function setSelectValue(select, value, label) {

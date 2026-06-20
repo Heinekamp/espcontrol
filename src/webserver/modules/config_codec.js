@@ -20,6 +20,14 @@ function normalizeButtonConfig(b) {
     b.icon_on = "Auto";
     if (!b.icon || b.icon === "Auto" || b.icon === "Flash") b.icon = "Gesture Tap";
   }
+  if (b && b.type === "local_sensor") {
+    b.type = "sensor";
+    b.sensor = SENSOR_CARD_LOCAL_SENSOR;
+    b.icon_on = "Auto";
+    b.options = "";
+    if (b.precision !== "text" && b.precision !== "1" && b.precision !== "2") b.precision = "";
+    if (b.precision !== "text" && (!b.icon || b.icon === "Auto")) b.icon = "Auto";
+  }
   if (b && b.type === "action" && b.sensor === "vacuum.start") {
     b.type = "vacuum";
     b.sensor = "start_stop";
@@ -185,7 +193,14 @@ function normalizeButtonConfig(b) {
   } else if (b && b.type === "action") {
     b.options = normalizeActionOptions(b.options, b.sensor);
   }
-  if (b && !b.type) {
+  if (b && sensorCardIsLocal(b)) {
+    b.type = "sensor";
+    b.sensor = SENSOR_CARD_LOCAL_SENSOR;
+    b.icon_on = "Auto";
+    b.options = "";
+    if (b.precision !== "text" && b.precision !== "1" && b.precision !== "2") b.precision = "";
+    if (b.precision !== "text" && (!b.icon || b.icon === "Auto")) b.icon = "Auto";
+  } else if (b && !b.type) {
     b.options = normalizeSwitchConfirmationOptions(b.options);
   } else if (b && b.type === "sensor") {
     b.options = normalizeSensorOptions(b.options, b.precision);
@@ -1393,26 +1408,30 @@ function buttonConfigFields(b) {
   var isActionOptionSelect = !!(b && (actionCardIsOptionSelect(b) || isOptionSelectType(type)));
   if (isActionOptionSelect) type = "action";
   if (type === "local") type = "action";
+  if (type === "local_sensor") type = "sensor";
   var label = b && b.label || "";
   if (type === "screen_lock") label = "";
   var sensor = isActionOptionSelect ? ACTION_CARD_OPTION_SELECT_ACTION :
     (isBrightnessSliderType(type) || type === "climate" || type === "light_switch" || type === "alarm" || type === "screen_lock" || isFanCardType(type)) ? "" : (b && b.sensor || "");
   if (b && b.type === "local") sensor = ACTION_CARD_LOCAL_ACTION;
+  if (b && (b.type === "local_sensor" || sensorCardIsLocal(b))) sensor = SENSOR_CARD_LOCAL_SENSOR;
+  var isLocalAction = type === "action" && sensor === ACTION_CARD_LOCAL_ACTION;
   var unit = (isActionOptionSelect || type === "climate" || type === "light_switch" || type === "alarm" || type === "alarm_action" || type === "screen_lock" || isFanCardType(type)) ? "" : (b && b.unit || "");
-  if (sensor === ACTION_CARD_LOCAL_ACTION) unit = "";
+  if (isLocalAction) unit = "";
   var icon = b && b.icon || "Auto";
   if (isActionOptionSelect && (!icon || icon === "Auto" || icon === "Chevron Down")) icon = "Flash";
-  if (sensor === ACTION_CARD_LOCAL_ACTION && (!icon || icon === "Auto" || icon === "Flash")) icon = "Gesture Tap";
+  if (isLocalAction && (!icon || icon === "Auto" || icon === "Flash")) icon = "Gesture Tap";
   if (type === "alarm" && (!icon || icon === "Auto")) icon = "Security";
   if (type === "screen_lock") icon = "Lock";
   if (type === "alarm_action" && (!icon || icon === "Auto")) icon = (alarmActionInfo(sensor) || alarmActionSpecs()[0]).icon;
   if (isFanCardType(type) && (!icon || icon === "Auto")) icon = fanCardDefaultIcon(type);
   var iconOn = (isActionOptionSelect || type === "alarm" || type === "alarm_action" || (isFanCardType(type) && type !== "fan_switch")) ? "Auto" : (b && b.icon_on || "Auto");
-  if (sensor === ACTION_CARD_LOCAL_ACTION) iconOn = "Auto";
+  if (isLocalAction) iconOn = "Auto";
   if (type === "fan_switch" && (!iconOn || iconOn === "Auto")) iconOn = "Fan";
   if (type === "screen_lock") iconOn = "Lock Open";
   var precision = (isActionOptionSelect || type === "light_switch" || type === "alarm" || type === "alarm_action" || type === "screen_lock" || isFanCardType(type)) ? "" : (b && b.precision || "");
-  if (sensor === ACTION_CARD_LOCAL_ACTION) precision = "";
+  if (isLocalAction) precision = "";
+  if (sensor === SENSOR_CARD_LOCAL_SENSOR && precision !== "text" && precision !== "1" && precision !== "2") precision = "";
   if (type === "media") {
     sensor = mediaEditorMode(sensor);
     precision = sensor === "now_playing"
@@ -1461,7 +1480,7 @@ function buttonConfigFields(b) {
   } else if (type === "vacuum") {
     options = "";
   } else if (type === "sensor") {
-    options = normalizeSensorOptions(options, precision);
+    options = sensor === SENSOR_CARD_LOCAL_SENSOR ? "" : normalizeSensorOptions(options, precision);
   } else if (type === "door_window") {
     options = normalizeDoorWindowOptions(options);
   } else if (type === "presence") {
