@@ -227,6 +227,14 @@ var ENTITY_CATALOG = {
         "screen_saver__hide_for_external_sources"
       ]
     },
+    "home_assistant_artwork_protocol": {
+      "domain": "select",
+      "name": "Home Assistant Artwork Protocol",
+      "objectIds": [
+        "home_assistant_artwork_protocol",
+        "cover_art_home_assistant_artwork_protocol"
+      ]
+    },
     "home_assistant_artwork_port": {
       "domain": "number",
       "name": "Home Assistant Artwork Port",
@@ -281,6 +289,10 @@ var ENTITY_CATALOG = {
     "screen_timezone": {
       "domain": "select",
       "name": "Screen: Timezone"
+    },
+    "screen_active_timezone": {
+      "domain": "text_sensor",
+      "name": "Screen: Active Timezone"
     },
     "screen_language": {
       "domain": "select",
@@ -528,6 +540,7 @@ var ENTITY_CATALOG = {
       "screen_saver_cover_art_delay",
       "screen_saver_track_overlay_duration",
       "screen_saver_hide_cover_art_external_input",
+      "home_assistant_artwork_protocol",
       "home_assistant_artwork_port",
       "screen_saver_daytime_clock_brightness",
       "screen_saver_nighttime_clock_brightness",
@@ -537,6 +550,7 @@ var ENTITY_CATALOG = {
       "home_screen_timeout",
       "screen_saver_clock",
       "screen_timezone",
+      "screen_active_timezone",
       "screen_language",
       "screen_clock_format",
       "screen_ntp_server_1",

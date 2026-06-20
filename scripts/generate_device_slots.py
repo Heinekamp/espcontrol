@@ -344,6 +344,10 @@ def package_file_text(device: dict) -> str:
                 "fw_update",
                 f"!include ../../common/addon/firmware_update{firmware_update_suffix}.yaml",
             ),
+            *[
+                include_line(key, include)
+                for key, include in (package.get("extraPackages") or {}).items()
+            ],
             "",
             "  # ---------------------------------------------------------------------------",
             "  # Screens (loading must be first page for LVGL startup)",

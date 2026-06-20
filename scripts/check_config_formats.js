@@ -707,6 +707,26 @@ assertButtonRoundTrip(hooks, "large sensor numbers option", {
   options: "large_numbers",
 }, false);
 
+const localSensorSubtype = {
+  entity: "room_temp",
+  label: "Living Room",
+  icon: "Auto",
+  icon_on: "Auto",
+  sensor: "local",
+  unit: "°C",
+  type: "sensor",
+  precision: "1",
+  options: "",
+};
+assertButtonRoundTrip(hooks, "local sensor subtype", localSensorSubtype, false);
+assert.strictEqual(hooks.sensorCardIsLocal(localSensorSubtype), true, "local sensor subtype is detected");
+assert.strictEqual(hooks.cardLargeNumbersEnabled({
+  type: "sensor",
+  sensor: "local",
+  precision: "1",
+  options: "large_numbers",
+}), false, "local sensor subtype does not use large sensor numbers");
+
 const iconSensor = hooks.parseButtonConfig(";;;;binary_sensor.patio_door;;sensor;icon;");
 iconSensor.icon = "Door Closed";
 iconSensor.icon_on = "Door Open";
@@ -2005,6 +2025,18 @@ assertButtonMigration(hooks, "legacy text sensor card", "sensor.washer_state;Was
   precision: "text",
 });
 
+assertButtonMigration(hooks, "legacy local sensor card", "room_temp;Living Room;Auto;Thermometer;;°C;local_sensor;1;large_numbers", {
+  entity: "room_temp",
+  label: "Living Room",
+  icon: "Auto",
+  icon_on: "Auto",
+  sensor: "local",
+  unit: "°C",
+  type: "sensor",
+  precision: "1",
+  options: "",
+});
+
 assertButtonMigration(hooks, "legacy media controls card", "media_player.living_room;Living Room;Speaker;Auto;controls;;media", {
   entity: "media_player.living_room",
   label: "Living Room",
@@ -2147,6 +2179,32 @@ assertButtonRoundTrip(hooks, "button action card", {
   type: "action",
   precision: "",
 }, false);
+
+assertButtonRoundTrip(hooks, "local action subtype card", {
+  entity: "zoom_mute",
+  label: "Zoom Mute",
+  icon: "Gesture Tap",
+  icon_on: "Auto",
+  sensor: "local",
+  unit: "",
+  type: "action",
+  precision: "",
+}, false);
+
+const parsedLocalActionSubtype = hooks.parseButtonConfig("zoom_mute;Zoom Mute;Gesture Tap;Auto;local;;action");
+assert.strictEqual(parsedLocalActionSubtype.type, "action", "local action subtype remains an action card");
+assert.strictEqual(hooks.actionCardIsLocal(parsedLocalActionSubtype), true, "local action subtype is detected");
+
+assertButtonMigration(hooks, "legacy local action card becomes action subtype", "zoom_mute;Zoom Mute;Auto;Auto;;;local;;state_entity=sensor.stale", {
+  entity: "zoom_mute",
+  label: "Zoom Mute",
+  icon: "Gesture Tap",
+  icon_on: "Auto",
+  sensor: "local",
+  unit: "",
+  type: "action",
+  precision: "",
+});
 
 assertButtonMigration(hooks, "legacy vacuum start action card", "vacuum.k11_vacuum_784c;Vacuum Bath;Robot Vacuum;Auto;vacuum.start;;action", {
   entity: "vacuum.k11_vacuum_784c",

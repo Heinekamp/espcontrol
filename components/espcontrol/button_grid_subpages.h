@@ -442,20 +442,9 @@ struct ClimateSubpageParentIndicatorCtx {
   const char *on_glyph = nullptr;
 };
 
-inline bool climate_subpage_mode_can_work(const std::string &mode) {
-  return mode == "cool" || mode == "heat" || mode == "auto" ||
-         mode == "heat_cool" || mode == "fan_only" || mode == "fan";
-}
-
-inline bool climate_subpage_action_is_working(const std::string &action) {
-  return action == "cooling" || action == "heating" || action == "fan";
-}
-
 inline void apply_climate_subpage_parent_indicator(ClimateSubpageParentIndicatorCtx *ctx) {
   if (!ctx) return;
-  bool working = ctx->available &&
-                 climate_subpage_mode_can_work(ctx->hvac_mode) &&
-                 climate_subpage_action_is_working(ctx->hvac_action);
+  bool working = ctx->available && climate_action_is_working(ctx->hvac_action);
   set_card_checked_state(ctx->parent_btn, working);
   if (ctx->has_alt_icon && ctx->parent_icon)
     lv_label_set_text(ctx->parent_icon, working ? ctx->on_glyph : ctx->off_glyph);

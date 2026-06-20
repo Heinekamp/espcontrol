@@ -612,6 +612,8 @@ def main() -> int:
             "namespace esphome { struct AppClass { bool is_setup_complete() const { return true; } }; inline AppClass App; }\n",
             encoding="utf-8",
         )
+        defines_stub = tmp_path / "esphome" / "core" / "defines.h"
+        defines_stub.write_text("", encoding="utf-8")
         log_stub = tmp_path / "esphome" / "core" / "log.h"
         log_stub.write_text("", encoding="utf-8")
         network_stub = tmp_path / "esphome" / "components" / "network" / "util.h"

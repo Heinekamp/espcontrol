@@ -1053,6 +1053,31 @@ function buildSettingsPage(parent) {
   var firmwareCard = makeCollapsibleCard("Firmware", fwBody, true);
 
   var homeAssistantSettingsBody = document.createElement("div");
+  var haProtocolField = document.createElement("div");
+  haProtocolField.className = "sp-field";
+  haProtocolField.appendChild(fieldLabel("Home Assistant Protocol", "sp-set-ha-artwork-protocol"));
+  var haProtocolSelect = document.createElement("select");
+  haProtocolSelect.className = "sp-select";
+  haProtocolSelect.id = "sp-set-ha-artwork-protocol";
+  ["http", "https"].forEach(function (option) {
+    var item = document.createElement("option");
+    item.value = option;
+    item.textContent = option;
+    haProtocolSelect.appendChild(item);
+  });
+  haProtocolSelect.value = normalizeHomeAssistantArtworkProtocol(state.homeAssistantArtworkProtocol);
+  haProtocolSelect.addEventListener("change", function () {
+    state.homeAssistantArtworkProtocol = normalizeHomeAssistantArtworkProtocol(this.value);
+    this.value = state.homeAssistantArtworkProtocol;
+    postSelectWithObjectIds(
+      entityName("home_assistant_artwork_protocol"),
+      entityObjectIds("home_assistant_artwork_protocol"),
+      state.homeAssistantArtworkProtocol);
+  });
+  haProtocolField.appendChild(haProtocolSelect);
+  homeAssistantSettingsBody.appendChild(haProtocolField);
+  els.setHomeAssistantArtworkProtocol = haProtocolSelect;
+
   var haPortField = document.createElement("div");
   haPortField.className = "sp-field";
   haPortField.appendChild(fieldLabel("Home Assistant Port", "sp-set-ha-artwork-port"));
@@ -1189,6 +1214,10 @@ function syncCoverArtScreensaverUi() {
   }
   if (els.setCoverArtHideExternalInputToggle) {
     els.setCoverArtHideExternalInputToggle.checked = !!state.coverArtHideExternalInputOn;
+  }
+  if (els.setHomeAssistantArtworkProtocol) {
+    els.setHomeAssistantArtworkProtocol.value =
+      normalizeHomeAssistantArtworkProtocol(state.homeAssistantArtworkProtocol);
   }
   if (els.setCoverArtHomeAssistantPort) {
     els.setCoverArtHomeAssistantPort.value = String(

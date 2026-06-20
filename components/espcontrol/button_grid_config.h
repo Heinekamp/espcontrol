@@ -1,6 +1,7 @@
 #pragma once
 
 // Internal implementation detail for button_grid.h. Include button_grid.h from device YAML.
+#include "esphome/core/defines.h"
 #ifdef USE_SENSOR
 #include "esphome/components/sensor/sensor.h"
 #endif
@@ -336,6 +337,14 @@ inline bool action_card_option_select(const ParsedCfg &p) {
   return p.type == "action" && action_card_option_select_action(p.sensor);
 }
 
+inline bool action_card_local_action(const ParsedCfg &p) {
+  return p.type == "action" && p.sensor == "local";
+}
+
+inline bool sensor_card_local_sensor(const ParsedCfg &p) {
+  return p.type == "sensor" && p.sensor == "local";
+}
+
 inline bool cfg_option_token_present(const std::string &options, const char *name) {
   if (!name || !*name || options.empty()) return false;
   size_t start = 0;
@@ -616,7 +625,7 @@ inline std::string climate_card_options_normalized(const std::string &options) {
 }
 
 inline bool action_card_large_numbers_supported(const ParsedCfg &p) {
-  if (p.type != "action") return false;
+  if (p.type != "action" || action_card_local_action(p)) return false;
   std::string precision = cfg_option_value(p.options, "state_precision");
   return precision == "0" || precision == "1" || precision == "2" ||
          !cfg_option_value(p.options, "state_unit").empty();
@@ -625,6 +634,7 @@ inline bool action_card_large_numbers_supported(const ParsedCfg &p) {
 inline bool card_large_numbers_supported(const ParsedCfg &p) {
   if (p.type.empty()) return !p.sensor.empty() && p.precision != "text";
   if (p.type == "action") return action_card_large_numbers_supported(p);
+  if (sensor_card_local_sensor(p)) return false;
   if (p.type == "media") return p.sensor == "volume" || p.sensor == "position";
   if (p.type == "climate") {
     return normalize_climate_number_display(cfg_option_value(p.options, "number_display")) != "icon";
@@ -822,6 +832,23 @@ inline std::string action_card_options_normalized(const std::string &options,
 }
 
 inline ParsedCfg normalize_parsed_cfg(ParsedCfg p) {
+  if (p.type == "local") {
+    p.type = "action";
+    p.sensor = "local";
+    p.unit.clear();
+    p.precision.clear();
+    p.options.clear();
+    p.icon_on = "Auto";
+    if (p.icon.empty() || p.icon == "Auto" || p.icon == "Flash") p.icon = "Gesture Tap";
+  }
+  if (p.type == "local_sensor") {
+    p.type = "sensor";
+    p.sensor = "local";
+    p.icon_on = "Auto";
+    p.options.clear();
+    if (p.precision != "text" && p.precision != "1" && p.precision != "2") p.precision.clear();
+    if (p.precision != "text" && (p.icon.empty() || p.icon == "Auto")) p.icon = "Auto";
+  }
   // Slider cards used to store "h" here for horizontal layout. Sliders are
   // now always vertical, so treat any saved slider sensor value as legacy.
   if (brightness_slider_type(p.type) && !p.sensor.empty()) p.sensor.clear();
@@ -964,6 +991,13 @@ inline ParsedCfg normalize_parsed_cfg(ParsedCfg p) {
     p.icon_on.clear();
     if (p.icon.empty() || p.icon == "Auto" || p.icon == "Chevron Down") p.icon = "Flash";
   }
+  if (action_card_local_action(p)) {
+    p.unit.clear();
+    p.precision.clear();
+    p.options.clear();
+    p.icon_on = "Auto";
+    if (p.icon.empty() || p.icon == "Auto" || p.icon == "Flash") p.icon = "Gesture Tap";
+  }
   if (p.type == "action" && p.sensor == "vacuum.start") {
     p.type = "vacuum";
     p.sensor = "start_stop";
@@ -1016,7 +1050,12 @@ inline ParsedCfg normalize_parsed_cfg(ParsedCfg p) {
   if (!p.type.empty() && p.type != "action" && p.type != "alarm" && p.type != "alarm_action" && p.type != "climate" && p.type != "garage" && p.type != "webhook" && p.type != "screen_lock" && p.type != "todo" && p.type != "sensor" && p.type != "door_window" && p.type != "presence" && p.type != "media" && p.type != "subpage" && p.type != "image" && p.type != "vacuum" && !fan_card_type(p.type) && !card_large_numbers_supported(p)) {
     p.options.clear();
   }
-  if (p.type == "sensor") {
+  if (sensor_card_local_sensor(p)) {
+    p.icon_on = "Auto";
+    p.options.clear();
+    if (p.precision != "text" && p.precision != "1" && p.precision != "2") p.precision.clear();
+    if (p.precision != "text" && (p.icon.empty() || p.icon == "Auto")) p.icon = "Auto";
+  } else if (p.type == "sensor") {
     p.options = sensor_card_options_normalized(p.options, p.precision);
   }
   return p;
@@ -1060,14 +1099,17 @@ inline int media_volume_max_percent(const ParsedCfg &p) {
 }
 
 inline std::string action_card_state_entity(const ParsedCfg &p) {
+  if (action_card_local_action(p)) return "";
   return p.type == "action" ? cfg_option_value(p.options, "state_entity") : "";
 }
 
 inline std::string action_card_state_unit(const ParsedCfg &p) {
+  if (action_card_local_action(p)) return "";
   return p.type == "action" ? cfg_option_value(p.options, "state_unit") : "";
 }
 
 inline std::string action_card_state_precision(const ParsedCfg &p) {
+  if (action_card_local_action(p)) return "";
   return p.type == "action" ? cfg_option_value(p.options, "state_precision") : "";
 }
 
@@ -1216,6 +1258,7 @@ inline bool is_text_sensor_card(const std::string &type, const std::string &prec
 }
 
 inline bool is_text_sensor_card(const ParsedCfg &p) {
+  if (sensor_card_local_sensor(p)) return false;
   return is_text_sensor_card(p.type, p.precision);
 }
 
