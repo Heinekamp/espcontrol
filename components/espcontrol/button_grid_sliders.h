@@ -545,7 +545,7 @@ inline lv_obj_t *light_control_create_tab_button(lv_obj_t *parent, const char *i
                                                  int width_compensation_percent) {
   lv_obj_t *btn = lv_btn_create(parent);
   if (!btn) return nullptr;
-  (void) width_compensation_percent;
+  apply_width_compensation(btn, width_compensation_percent);
   lv_obj_set_style_bg_color(btn, lv_color_hex(DARK_BACKGROUND_TERTIARY), LV_PART_MAIN);
   lv_obj_set_style_bg_opa(btn, LV_OPA_TRANSP, LV_PART_MAIN);
   lv_obj_set_style_border_width(btn, 0, LV_PART_MAIN);
@@ -675,9 +675,11 @@ inline void light_control_update_slider_handle(lv_obj_t *slider, lv_obj_t *handl
 }
 
 inline void light_control_layout_slider(lv_obj_t *slider, lv_coord_t width,
-                                        lv_coord_t height, lv_coord_t center_y) {
+                                        lv_coord_t height, lv_coord_t center_y,
+                                        int width_compensation_percent) {
   if (!slider) return;
   lv_obj_set_size(slider, width, height);
+  apply_width_compensation(slider, width_compensation_percent);
   lv_obj_align(slider, LV_ALIGN_CENTER, 0, center_y);
   lv_coord_t slider_radius = width / 5;
   if (slider_radius < 18) slider_radius = 18;
@@ -858,14 +860,16 @@ inline void light_control_layout_modal(LightControlCtx *ctx) {
   light_control_layout_power(
     ui.power_group, ui.power_on_btn, ui.power_off_btn, slider_w, slider_h, content_center_y);
   light_control_apply_modal_power(ctx);
-  light_control_layout_slider(ui.slider, slider_w, slider_h, content_center_y);
+  light_control_layout_slider(
+    ui.slider, slider_w, slider_h, content_center_y, ctx->width_compensation_percent);
   lv_obj_update_layout(ui.panel);
   int display_pct = light_control_display_pct(ctx);
   light_control_update_slider_fill(
     ui.slider, ui.slider_fill, ui.slider_handle, display_pct,
     lv_color_hex(ctx->accent_color));
   light_control_update_slider_handle(ui.slider, ui.slider_handle, display_pct);
-  light_control_layout_slider(ui.temp_slider, slider_w, slider_h, content_center_y);
+  light_control_layout_slider(
+    ui.temp_slider, slider_w, slider_h, content_center_y, ctx->width_compensation_percent);
   lv_obj_update_layout(ui.panel);
   light_control_update_slider_fill(
     ui.temp_slider, ui.temp_slider_fill, ui.temp_slider_handle,
