@@ -911,6 +911,21 @@ function escHtml(s) {
     .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+function mdiIcon(icon, className) {
+  var iconName = String(icon || "cog").trim();
+  var span = document.createElement("span");
+  span.className = className || "mdi";
+  span.classList.add("mdi-" + (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(iconName) ? iconName : iconSlug(iconName)));
+  return span;
+}
+
+function textSpan(text, className) {
+  var span = document.createElement("span");
+  if (className) span.className = className;
+  span.textContent = text == null ? "" : String(text);
+  return span;
+}
+
 function screenRotationStartupRequired() {
   return !!(CFG.features && CFG.features.screenRotation);
 }
@@ -1439,7 +1454,7 @@ function isFirmwareInstallButtonEvent(id, d) {
 }
 
 function escAttr(s) {
-  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;")
+  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;")
     .replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 

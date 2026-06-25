@@ -728,7 +728,12 @@ async function assertEmptyCellSettings(page, posts, label) {
   await page.waitForTimeout(100);
   assert.strictEqual(posts.length, before, `${label}: opening a new card draft should not post immediately`);
   assert(await page.locator("#sp-card-type-picker").isVisible(), `${label}: new card draft shows the card type grid`);
-  assert(await page.locator(".sp-card-type-option").filter({ hasText: "Switch" }).first().isVisible(), `${label}: new card draft shows Switch as a card type`);
+  const switchTypeOption = page.getByRole("button", { name: "Switch card type" });
+  assert(await switchTypeOption.isVisible(), `${label}: new card draft shows Switch as a card type`);
+  assert(
+    (await switchTypeOption.locator(".sp-card-type-icon").getAttribute("class")).includes("mdi-toggle-switch"),
+    `${label}: card type picker preserves pre-slugged MDI icon names`
+  );
   assert.strictEqual(await page.locator("#sp-inp-type").count(), 0, `${label}: new card draft does not show the compact type dropdown before selection`);
   assert.strictEqual(await page.locator(".sp-settings-modal .sp-save-btn").count(), 0, `${label}: new card draft hides Save until a type is selected`);
   assert.strictEqual(await page.locator(".sp-settings-modal .sp-delete-btn").count(), 0, `${label}: new card draft hides Delete before save`);
