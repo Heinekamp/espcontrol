@@ -1,6 +1,21 @@
 // ── POST queue ─────────────────────────────────────────────────────────
 
 var _postQueue = Promise.resolve();
+var _postThrottleMs = 0;
+
+function postDelay(ms) {
+  ms = parseInt(ms, 10) || 0;
+  if (ms <= 0) return Promise.resolve();
+  return new Promise(function (resolve) { setTimeout(resolve, ms); });
+}
+
+function setPostThrottle(ms) {
+  _postThrottleMs = Math.max(0, parseInt(ms, 10) || 0);
+}
+
+function postQueueIdle() {
+  return _postQueue;
+}
 
 function uniquePush(list, value) {
   if (value && list.indexOf(value) === -1) list.push(value);
@@ -308,10 +323,11 @@ function entityPostUrls(domain, name, objectIds, action) {
 function post(url, fallbackUrl, errorMessage) {
   var urls = Array.isArray(url) ? url.slice() : [url];
   if (fallbackUrl) urls.push(fallbackUrl);
+  var throttleMs = _postThrottleMs;
   _postQueue = _postQueue.then(function () {
     return postFirstAvailable(urls).then(function (r) {
       if (r && !r.ok) showBanner(errorMessage || ("Request failed: " + r.status), "error");
-      return r;
+      return postDelay(throttleMs).then(function () { return r; });
     }).catch(function () {
       setConfigLocked(true, "Reconnecting to device\u2026");
       showBanner("Cannot reach device \u2014 is it connected?", "error");
@@ -323,8 +339,11 @@ function post(url, fallbackUrl, errorMessage) {
 
 function postOptional(url) {
   var urls = Array.isArray(url) ? url.slice() : [url];
+  var throttleMs = _postThrottleMs;
   _postQueue = _postQueue.then(function () {
-    return postFirstAvailable(urls).catch(function () {
+    return postFirstAvailable(urls).then(function (r) {
+      return postDelay(throttleMs).then(function () { return r; });
+    }).catch(function () {
       setConfigLocked(true, "Reconnecting to device\u2026");
       showBanner("Cannot reach device \u2014 is it connected?", "error");
       setTimeout(connectEvents, 5000);
