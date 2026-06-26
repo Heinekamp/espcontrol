@@ -83,6 +83,7 @@ esphome:
         - lambda: 'id(screen_rotation_ready) = true;'
         - script.execute: apply_screen_rotation
         - script.execute: clock_bar_apply
+        - switch.turn_on: speaker_pa_enable  
 
 # ---------------------------------------------------------------------------
 # PSRAM (frame buffer memory)
@@ -347,6 +348,15 @@ media_player:
       speaker: spk_announcement_resampled
       num_channels: 1
       format: FLAC
+
+switch:
+  - platform: gpio
+    name: "Speaker Amplifier"
+    id: speaker_pa_enable
+    pin:
+      pca9554: pca9554_hub
+      number: 7
+    restore_mode: ALWAYS_ON
 
 # ---------------------------------------------------------------------------
 # Scripts
