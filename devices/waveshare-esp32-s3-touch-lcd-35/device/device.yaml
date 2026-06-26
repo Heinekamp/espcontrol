@@ -285,7 +285,7 @@ lvgl:
       long_press_time: 3s
 
 # ---------------------------------------------------------------------------
-# Screen rotation script
+# Scripts
 # ---------------------------------------------------------------------------
 script:
   - id: apply_screen_rotation
@@ -313,6 +313,8 @@ script:
     mode: single
     then:
       - wifi.enable:
+      - lambda: 'wifi::global_wifi_component->start_connecting(wifi::global_wifi_component->get_ap(), false);'
+      - wait_until:
       - wait_until:
           condition:
             wifi.connected:
