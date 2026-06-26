@@ -51,6 +51,7 @@ esphome:
       - "-DESPCONTROL_DISABLE_TODO=1"
       - "-DESPCONTROL_MAX_GRID_SLOTS=6"
       - "-DUSE_ESP_IDF"
+      - "-include esp_wifi.h"
     build_src_flags:
       - "-mtext-section-literals"
   on_boot:
