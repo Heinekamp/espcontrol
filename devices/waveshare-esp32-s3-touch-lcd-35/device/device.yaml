@@ -241,7 +241,7 @@ display:
       pca9554: pca9554_hub
       number: 1
     spi_mode: 1
-    color_order: bgr
+    color_order: rgb
     pixel_mode: 16bit
     auto_clear_enabled: false
     update_interval: never
