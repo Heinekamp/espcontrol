@@ -234,14 +234,12 @@ display:
     id: my_display
     spi_id: display_spi
     cs_pin:
-      pca9554:
-        id: pca9554_hub
-        number: 2
+      pca9554: pca9554_hub
+      number: 2
     dc_pin: GPIO03
     reset_pin:
-      pca9554:
-        id: pca9554_hub
-        number: 1
+      pca9554: pca9554_hub
+      number: 1
     spi_mode: 1
     color_order: bgr
     pixel_mode: 16bit
