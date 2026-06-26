@@ -47,11 +47,12 @@ esphome:
   name: ${name}
   friendly_name: ${friendly_name}
   includes:
-    - esp_wifi.h
+    - devices/waveshare-esp32-s3-touch-lcd-35/device/wifi_ps.h
   platformio_options:
     build_flags:
       - "-DESPCONTROL_DISABLE_TODO=1"
       - "-DESPCONTROL_MAX_GRID_SLOTS=6"
+      - "-I${platformio.packages_dir}/framework-espidf/components/esp_wifi/include"
     build_src_flags:
       - "-mtext-section-literals"
   on_boot:
