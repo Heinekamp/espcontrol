@@ -313,7 +313,7 @@ script:
     mode: single
     then:
       - wifi.enable:
-      - lambda: 'wifi::global_wifi_component->start_connecting(wifi::global_wifi_component->get_ap(), false);'
+      - lambda: 'wifi::global_wifi_component->retry_connect();'
       - wait_until:
       - wait_until:
           condition:
