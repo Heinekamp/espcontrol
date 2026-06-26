@@ -23,6 +23,7 @@ esp32:
       CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC: "y"
       CONFIG_ESP_TASK_WDT_TIMEOUT_S: "30"
       CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM: "8"
+      CONFIG_ESP_WIFI_DYNAMIC_TX_BUFFER: "y"
       CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP: "y"
 
 # ---------------------------------------------------------------------------
@@ -49,6 +50,7 @@ esphome:
     build_flags:
       - "-DESPCONTROL_DISABLE_TODO=1"
       - "-DESPCONTROL_MAX_GRID_SLOTS=6"
+      - "-DUSE_ESP_IDF"
     build_src_flags:
       - "-mtext-section-literals"
   on_boot:
