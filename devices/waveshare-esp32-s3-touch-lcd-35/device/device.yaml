@@ -294,44 +294,29 @@ lvgl:
 # ---------------------------------------------------------------------------
 # ES8311 Audio DAC + Speaker Media Player
 # ---------------------------------------------------------------------------
-i2s_audio:
-  - id: i2s_bus
-    i2s_lrclk_pin: GPIO15
-    i2s_bclk_pin: GPIO13
-    i2s_mclk_pin: GPIO12
-
-audio_dac:
-  - platform: es8311
-    id: es8311_dac
-    i2c_id: i2c_bus
-    address: 0x18
-    bits_per_sample: 16bit
-    sample_rate: 48000
-    use_mclk: true
-
 speaker:
   - platform: i2s_audio
-    id: i2s_speaker
+    id: spk_i2s_out
     dac_type: external
     i2s_dout_pin: GPIO16
     i2s_audio_id: i2s_bus
     sample_rate: 48000
     i2s_mode: secondary
-    
+
   - platform: mixer
-    id: mixer_speaker
-    output_speaker: i2s_speaker
+    id: spk_mixer
+    output_speaker: spk_i2s_out
     source_speakers:
-      - id: announcement_spk_input
-      - id: media_spk_input
+      - id: spk_announcement_input
+      - id: spk_media_input
 
   - platform: resampler
-    id: media_spk_resampled
-    output_speaker: media_spk_input
+    id: spk_media_resampled
+    output_speaker: spk_media_input
 
   - platform: resampler
-    id: announcement_spk_resampled
-    output_speaker: announcement_spk_input
+    id: spk_announcement_resampled
+    output_speaker: spk_announcement_input
 
 media_player:
   - platform: speaker
@@ -339,11 +324,11 @@ media_player:
     id: media_player_out
     task_stack_in_psram: true
     media_pipeline:
-      speaker: media_spk_resampled
+      speaker: spk_media_resampled
       num_channels: 1
       format: FLAC
     announcement_pipeline:
-      speaker: announcement_spk_resampled
+      speaker: spk_announcement_resampled
       num_channels: 1
       format: FLAC
 
