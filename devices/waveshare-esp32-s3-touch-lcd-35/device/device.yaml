@@ -46,6 +46,8 @@ espcontrol:
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
+  includes:
+    - esp_wifi.h
   platformio_options:
     build_flags:
       - "-DESPCONTROL_DISABLE_TODO=1"
@@ -206,7 +208,6 @@ light:
                     lambda: 'return id(screensaver_display_off_active);'
                   then:
                     - lambda: |-
-                        #include "esp_wifi.h"
                         esp_wifi_set_ps(WIFI_PS_MIN_MODEM);
                     - delay: 500ms
                     - script.execute: screensaver_wake
@@ -227,7 +228,6 @@ light:
             then:
               - delay: 500ms
               - lambda: |-
-                  #include "esp_wifi.h"
                   esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
 # ---------------------------------------------------------------------------
 # SPI bus — ST7796 display
