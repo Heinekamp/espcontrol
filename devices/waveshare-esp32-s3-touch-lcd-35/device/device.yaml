@@ -299,7 +299,7 @@ i2s_audio:
     i2s_lrclk_pin: GPIO15
     i2s_bclk_pin: GPIO13
     i2s_mclk_pin: GPIO12
-    sample_rate: 48000
+    sample_rate: 16000
 
 audio_dac:
   - platform: es8311
@@ -307,7 +307,7 @@ audio_dac:
     i2c_id: i2c_bus
     address: 0x18
     bits_per_sample: 16bit
-    sample_rate: 48000
+    sample_rate: 16000
     use_mclk: true
 
 speaker:
@@ -315,7 +315,7 @@ speaker:
     id: i2s_speaker
     dac_type: external
     i2s_dout_pin: GPIO16
-    sample_rate: 48000
+    sample_rate: 16000
     mode: mono
 
   - platform: mixer
@@ -346,7 +346,7 @@ media_player:
       speaker: announcement_spk_resampled
       num_channels: 1
       format: FLAC
-      
+
 # ---------------------------------------------------------------------------
 # Scripts
 # ---------------------------------------------------------------------------
