@@ -1,0 +1,13 @@
+substitutions:
+  name: "touch-controller"
+  friendly_name: "Touch Controller"
+
+wifi:
+  ssid: "DWD-Wetterballon #4711"
+  password: "Freiburg2022!"
+
+packages:
+  setup:
+    url: https://github.com/Heinekamp/espcontrol/
+    file: devices/waveshare-esp32-s3-touch-lcd-35/packages.yaml
+    refresh: 1s
