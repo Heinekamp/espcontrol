@@ -47,6 +47,7 @@ esphome:
   name: ${name}
   friendly_name: ${friendly_name}
   includes:
+    #Include ESP wifi header for wifi power save mode workaround
     - devices/waveshare-esp32-s3-touch-lcd-35/device/wifi_ps.h
   platformio_options:
     build_flags:
@@ -294,6 +295,21 @@ lvgl:
 # ---------------------------------------------------------------------------
 # ES8311 Audio DAC + Speaker Media Player
 # ---------------------------------------------------------------------------
+i2s_audio:
+  - id: i2s_bus
+    i2s_lrclk_pin: GPIO15
+    i2s_bclk_pin: GPIO13
+    i2s_mclk_pin: GPIO12
+
+audio_dac:
+  - platform: es8311
+    id: es8311_dac
+    i2c_id: i2c_bus
+    address: 0x18
+    bits_per_sample: 16bit
+    sample_rate: 48000
+    use_mclk: true
+
 speaker:
   - platform: i2s_audio
     id: spk_i2s_out
