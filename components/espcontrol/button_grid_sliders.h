@@ -537,7 +537,7 @@ inline lv_coord_t control_modal_card_tab_content_gap(const ControlModalLayout &l
   return control_modal_control_tab_content_gap(layout);
 }
 
-inline lv_coord_t light_control_card_tab_content_gap(const ControlModalLayout &layout) {
+inline lv_coord_t control_modal_prominent_card_tab_content_gap(const ControlModalLayout &layout) {
   if (control_modal_uses_compact_portrait_tuning(layout))
     return control_modal_scaled_px(30, layout.short_side);
   return control_modal_card_tab_content_gap(layout);
@@ -867,7 +867,7 @@ inline void light_control_layout_modal(LightControlCtx *ctx) {
   }
 
   lv_coord_t content_top = show_tab_bar
-    ? layout.inset + tab_frame_h + light_control_card_tab_content_gap(layout)
+    ? layout.inset + tab_frame_h + control_modal_prominent_card_tab_content_gap(layout)
     : layout.inset * 2;
   lv_coord_t content_bottom = layout.panel_h - layout.inset;
   lv_coord_t slider_h = content_bottom - content_top;
@@ -1921,7 +1921,7 @@ inline void cover_control_layout_modal(CoverControlCtx *ctx) {
   }
 
   lv_coord_t content_top = show_tab_bar
-    ? layout.inset + tab_frame_h + control_modal_card_tab_content_gap(layout)
+    ? layout.inset + tab_frame_h + control_modal_prominent_card_tab_content_gap(layout)
     : layout.inset * 2;
   lv_coord_t content_bottom = layout.panel_h - layout.inset;
   lv_coord_t content_h = content_bottom - content_top;
