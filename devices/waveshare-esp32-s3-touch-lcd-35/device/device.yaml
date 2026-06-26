@@ -204,7 +204,10 @@ light:
                   condition:
                     lambda: 'return id(screensaver_display_off_active);'
                   then:
-                    - script.execute: wifi_reconnect_then_wake
+                    - lambda: |-
+                        esp_wifi_set_ps(WIFI_PS_MIN_MODEM);
+                    - delay: 500ms
+                    - script.execute: screensaver_wake
     on_turn_off:
       then:
         - if:
@@ -221,7 +224,8 @@ light:
               lambda: 'return id(screensaver_display_off_active);'
             then:
               - delay: 500ms
-              - wifi.disable:
+              - lambda: |-
+                  esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
 # ---------------------------------------------------------------------------
 # SPI bus — ST7796 display
 # ---------------------------------------------------------------------------
@@ -309,21 +313,6 @@ script:
                         - lvgl.display.set_rotation: 270
                       else:
                         - lvgl.display.set_rotation: 0
-  - id: wifi_reconnect_then_wake
-    mode: single
-    then:
-      - wifi.enable:
-      - wait_until:
-          condition:
-            wifi.connected:
-          timeout: 30s
-      - if:
-          condition:
-            wifi.connected:
-          then:
-            - script.execute: screensaver_wake
-          else:
-            - script.execute: screensaver_wake
 
 select:
   - platform: template
