@@ -292,13 +292,14 @@ lvgl:
       long_press_time: 3s
 
 # ---------------------------------------------------------------------------
-# ES8311 Audio DAC
+# ES8311 Audio DAC + Speaker Media Player
 # ---------------------------------------------------------------------------
 i2s_audio:
   - id: i2s_bus
     i2s_lrclk_pin: GPIO15
     i2s_bclk_pin: GPIO13
     i2s_mclk_pin: GPIO12
+    sample_rate: 48000
 
 audio_dac:
   - platform: es8311
@@ -306,18 +307,46 @@ audio_dac:
     i2c_id: i2c_bus
     address: 0x18
     bits_per_sample: 16bit
-    sample_rate: 16000
+    sample_rate: 48000
     use_mclk: true
 
-media_player:
+speaker:
   - platform: i2s_audio
-    id: media_player_out
-    name: "Touch Controller Speaker"
-    i2s_audio_id: i2s_bus
+    id: i2s_speaker
     dac_type: external
     i2s_dout_pin: GPIO16
-    i2s_din_pin: GPIO14
+    sample_rate: 48000
     mode: mono
+
+  - platform: mixer
+    id: mixer_speaker
+    output_speaker: i2s_speaker
+    source_speakers:
+      - id: announcement_spk_input
+      - id: media_spk_input
+
+  - platform: resampler
+    id: media_spk_resampled
+    output_speaker: media_spk_input
+
+  - platform: resampler
+    id: announcement_spk_resampled
+    output_speaker: announcement_spk_input
+
+media_player:
+  - platform: speaker
+    name: "Touch Controller Speaker"
+    id: media_player_out
+    task_stack_in_psram: true
+    media_pipeline:
+      speaker: media_spk_resampled
+      num_channels: 1
+      format: FLAC
+    announcement_pipeline:
+      speaker: announcement_spk_resampled
+      num_channels: 1
+      format: FLAC
+      
 # ---------------------------------------------------------------------------
 # Scripts
 # ---------------------------------------------------------------------------
