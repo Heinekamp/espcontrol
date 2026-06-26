@@ -145,6 +145,7 @@ logger:
   hardware_uart: UART0
 
 wifi:
+  power_save_mode: HIGH
   use_psram: true
 
 # ---------------------------------------------------------------------------
