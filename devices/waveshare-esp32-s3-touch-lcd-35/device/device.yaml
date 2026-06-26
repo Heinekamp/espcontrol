@@ -293,6 +293,36 @@ lvgl:
       long_press_time: 3s
 
 # ---------------------------------------------------------------------------
+# ES8311 Audio DAC
+# ---------------------------------------------------------------------------
+i2s_audio:
+  - id: i2s_bus
+    i2s_lrclk_pin: GPIO15
+    i2s_bclk_pin: GPIO13
+    i2s_mclk_pin: GPIO12
+
+audio_dac:
+  - platform: es8311
+    id: es8311_dac
+    i2c_id: i2c_bus
+    address: 0x18
+    i2s_id: i2s_bus
+    bits_per_sample: 16bit
+    sample_rate: 16000
+    use_mclk: true
+    din_gpios: GPIO16
+    dout_gpios: GPIO14
+
+media_player:
+  - platform: i2s_audio
+    id: media_player_out
+    name: "Touch Controller Speaker"
+    i2s_audio_id: i2s_bus
+    dac_type: external
+    i2s_dout_pin: GPIO16
+    mode: mono
+
+# ---------------------------------------------------------------------------
 # Scripts
 # ---------------------------------------------------------------------------
 script:
