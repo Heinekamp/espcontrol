@@ -313,8 +313,6 @@ script:
     mode: single
     then:
       - wifi.enable:
-      - lambda: 'wifi::global_wifi_component->retry_connect();'
-      - wait_until:
       - wait_until:
           condition:
             wifi.connected:
@@ -325,8 +323,6 @@ script:
           then:
             - script.execute: screensaver_wake
           else:
-            # WiFi failed to reconnect within 30s — wake anyway so the
-            # screen is usable, HA data just won't update until it reconnects
             - script.execute: screensaver_wake
 
 select:
