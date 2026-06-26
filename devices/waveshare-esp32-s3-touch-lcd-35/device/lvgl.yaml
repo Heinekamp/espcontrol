@@ -1,0 +1,133 @@
+# =============================================================================
+# LVGL MAIN PAGE - Waveshare ESP32-S3-Touch-LCD-3.5 (320x480 portrait)
+# =============================================================================
+# 2-column x 3-row grid (6 slots) for the portrait 3.5" panel.
+# Top bar sits above the grid; pad_top clears it.
+# =============================================================================
+
+lvgl:
+  # ---------------------------------------------------------------------------
+  # Top layer (always visible above all pages)
+  # ---------------------------------------------------------------------------
+  top_layer:
+    widgets:
+      # Indoor/outdoor temperature labels (top-left)
+      - label:
+          text: "-°C"
+          id: temperatures
+          text_font: font_text_body
+          align: top_left
+          x: 8
+          y: 8
+          text_color: 0xFFFFFF
+          hidden: true
+      - label:
+          text: "-°C"
+          id: temperature_2
+          text_font: font_text_body
+          align: top_left
+          x: 0
+          y: 0
+          text_color: 0xFFFFFF
+          hidden: true
+      - label:
+          text: "-°C"
+          id: temperature_3
+          text_font: font_text_body
+          align: top_left
+          x: 0
+          y: 0
+          text_color: 0xFFFFFF
+          hidden: true
+      - label:
+          text: "-°C"
+          id: temperature_4
+          text_font: font_text_body
+          align: top_left
+          x: 0
+          y: 0
+          text_color: 0xFFFFFF
+          hidden: true
+      - label:
+          text: "-°C"
+          id: temperature_5
+          text_font: font_text_body
+          align: top_left
+          x: 0
+          y: 0
+          text_color: 0xFFFFFF
+          hidden: true
+      - label:
+          text: "-°C"
+          id: temperature_6
+          text_font: font_text_body
+          align: top_left
+          x: 0
+          y: 0
+          text_color: 0xFFFFFF
+          hidden: true
+      # Clock (top-center)
+      - label:
+          text: "--:--"
+          id: display_time
+          text_font: font_text_body
+          align: top_mid
+          x: 0
+          y: 8
+          text_align: center
+          text_color: 0xFFFFFF
+          hidden: true
+      # Network status button (top-right)
+      - obj:
+          id: network_status_button
+          align: top_right
+          x: -8
+          y: 1
+          width: 44
+          height: 40
+          bg_opa: 0%
+          border_width: 0
+          pad_all: 0
+          scrollable: false
+          scrollbar_mode: "off"
+          clickable: true
+          hidden: true
+          widgets:
+            - label:
+                id: network_status_icon_label
+                text: "\U000F0928"
+                text_font: font_icon_status
+                align: center
+                text_align: center
+                text_color: 0xFFFFFF
+          on_press:
+            then:
+              - script.execute: network_status_open_info
+
+  # ---------------------------------------------------------------------------
+  # Main page — 2-column x 3-row grid (6 slots)
+  # ---------------------------------------------------------------------------
+  pages:
+    - id: main_page
+      scrollbar_mode: "off"
+      layout:
+        type: grid
+        grid_columns: [FR(1), FR(1)]
+        grid_rows: [FR(1), FR(1), FR(1)]
+        pad_row: ${main_page_card_gap}
+        pad_column: ${main_page_card_gap}
+      width: 100%
+      bg_color: Black
+      bg_opa: cover
+      pad_top: ${main_page_pad_top}
+      pad_bottom: 4
+      pad_left: 5
+      pad_right: 5
+
+      widgets:
+        - !include { file: ../../../common/device/button_widget.yaml, vars: { num: "1" } }
+        - !include { file: ../../../common/device/button_widget.yaml, vars: { num: "2" } }
+        - !include { file: ../../../common/device/button_widget.yaml, vars: { num: "3" } }
+        - !include { file: ../../../common/device/button_widget.yaml, vars: { num: "4" } }
+        - !include { file: ../../../common/device/button_widget.yaml, vars: { num: "5" } }
+        - !include { file: ../../../common/device/button_widget.yaml, vars: { num: "6" } }

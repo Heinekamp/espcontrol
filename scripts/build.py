@@ -14,12 +14,19 @@ Usage:
     python scripts/build.py icons --check # check icons only
 """
 import json
+import pathlib
 import re
 import shutil
 import subprocess
 import sys
 import urllib.request
 from pathlib import Path
+# Windows uses cp1252 by default; force UTF-8 for all Path.read_text(encoding="utf-8") calls
+if hasattr(pathlib.Path, '_flavour'):  # Python < 3.12
+    pass
+open_kwargs = {"encoding": "utf-8"}
+
+
 
 from device_profiles import load_device_profiles, public_device_capabilities, web_config
 from product_schema import ProductSchemaError, assert_card_contract_valid
@@ -203,7 +210,7 @@ def sync_entity_names(check_only=False):
     ]
     dirty = []
     for path, content in outputs:
-        if not path.exists() or path.read_text() != content:
+        if not path.exists() or path.read_text(encoding="utf-8") != content:
             dirty.append(path.relative_to(ROOT))
 
     if check_only:
@@ -214,10 +221,10 @@ def sync_entity_names(check_only=False):
         return dirty
 
     for path, content in outputs:
-        if path.exists() and path.read_text() == content:
+        if path.exists() and path.read_text(encoding="utf-8") == content:
             continue
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content)
+        path.write_text(content,encoding="utf-8")
         print(f"  updated {path.relative_to(ROOT)}")
     return dirty
 
@@ -966,7 +973,7 @@ def sync_card_contract(check_only=False):
     ]
     dirty = []
     for path, content in outputs:
-        if not path.exists() or path.read_text() != content:
+        if not path.exists() or path.read_text(encoding="utf-8") != content:
             dirty.append(path.relative_to(ROOT))
 
     if check_only:
@@ -977,10 +984,10 @@ def sync_card_contract(check_only=False):
         return dirty
 
     for path, content in outputs:
-        if path.exists() and path.read_text() == content:
+        if path.exists() and path.read_text(encoding="utf-8") == content:
             continue
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content)
+        path.write_text(content,encoding="utf-8")
         print(f"  updated {path.relative_to(ROOT)}")
     return dirty
 
@@ -1063,7 +1070,7 @@ def sync_device_capabilities(check_only=False):
     }
     dirty = []
     for path, generated in outputs.items():
-        if not path.exists() or path.read_text() != generated:
+        if not path.exists() or path.read_text(encoding="utf-8") != generated:
             dirty.append(path.relative_to(ROOT))
 
     if check_only:
@@ -1074,10 +1081,10 @@ def sync_device_capabilities(check_only=False):
         return dirty
 
     for path, generated in outputs.items():
-        if path.exists() and path.read_text() == generated:
+        if path.exists() and path.read_text(encoding="utf-8") == generated:
             continue
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(generated)
+        path.write_text(generated, encoding="utf-8")
         print(f"  updated {path.relative_to(ROOT)}")
     return dirty
 
@@ -1132,7 +1139,7 @@ def check_firmware_icon_literals(data):
     for path in sorted((ROOT / "components" / "espcontrol").glob("*.h")):
         if path.name == "icons.h":
             continue
-        text = path.read_text()
+        text = path.read_text(encoding="utf-8")
         for match in re.finditer(r"\\U([0-9A-Fa-f]{8})", text):
             codepoint = normalize_icon_codepoint(match.group(1))
             if codepoint in known_codepoints:
@@ -1158,7 +1165,7 @@ def check_mdi_versions():
     )
     errors = []
     for path in files:
-        versions = set(version_re.findall(path.read_text()))
+        versions = set(version_re.findall(path.read_text(encoding="utf-8")))
         if versions and versions != {MDI_VERSION}:
             rel = path.relative_to(ROOT)
             errors.append(f"{rel} references MDI version(s) {', '.join(sorted(versions))}, expected {MDI_VERSION}")
@@ -1308,7 +1315,7 @@ def sync_icons(check_only=False):
     file_contents = {}
     for path, start_tag, end_tag, generator in patches:
         if path not in file_contents:
-            file_contents[path] = path.read_text()
+            file_contents[path] = path.read_text(encoding="utf-8")
         old = file_contents[path]
         new_content = generator(data)
         updated = replace_between_markers(old, start_tag, end_tag, new_content)
@@ -1324,9 +1331,9 @@ def sync_icons(check_only=False):
         return dirty
 
     for path, content in file_contents.items():
-        original = path.read_text()
+        original = path.read_text(encoding="utf-8")
         if content != original:
-            path.write_text(content)
+            path.write_text(content, encoding="utf-8")
             print(f"  updated {path.relative_to(ROOT)}")
     return dirty
 
@@ -1381,7 +1388,7 @@ def build_web_devices():
 
 def load_timezone_options():
     options = []
-    for match in re.finditer(r'^\s+- "([^"]+)"$', TIME_YAML.read_text(), re.M):
+    for match in re.finditer(r'^\s+- "([^"]+)"$', TIME_YAML.read_text(encoding="utf-8"), re.M):
         option = match.group(1)
         if option == "Auto (Home Assistant)" or (
             " (GMT" in option and ("/" in option or option.startswith("UTC "))
@@ -1401,7 +1408,7 @@ def load_button_types():
     chunks = []
     for f in files:
         chunks.append(f"  // --- type: {f.stem} ---")
-        for line in f.read_text().rstrip().splitlines():
+        for line in f.read_text(encoding="utf-8").rstrip().splitlines():
             chunks.append(f"  {line}" if line.strip() else "")
     return "\n".join(chunks) + "\n"
 
@@ -1413,7 +1420,7 @@ def load_web_modules():
         if not path.exists():
             raise BuildError(f"Missing web module: {path.relative_to(ROOT)}")
         chunks.append(f"  // --- module: {name} ---")
-        for line in path.read_text().rstrip().splitlines():
+        for line in path.read_text(encoding="utf-8").rstrip().splitlines():
             chunks.append(f"  {line}" if line.strip() else "")
     return "\n".join(chunks) + "\n"
 
@@ -1512,7 +1519,7 @@ def build_model_generated_js():
 def sync_web_model(check_only=False):
     generated = build_model_generated_js()
     dirty = []
-    if not MODEL_GENERATED_JS.exists() or MODEL_GENERATED_JS.read_text() != generated:
+    if not MODEL_GENERATED_JS.exists() or MODEL_GENERATED_JS.read_text(encoding="utf-8") != generated:
         dirty.append(MODEL_GENERATED_JS.relative_to(ROOT))
 
     if check_only:
@@ -1524,7 +1531,7 @@ def sync_web_model(check_only=False):
 
     if dirty:
         MODEL_GENERATED_JS.parent.mkdir(parents=True, exist_ok=True)
-        MODEL_GENERATED_JS.write_text(generated)
+        MODEL_GENERATED_JS.write_text(generated, encoding="utf-8")
         print(f"  updated {MODEL_GENERATED_JS.relative_to(ROOT)}")
     return dirty
 
@@ -1532,7 +1539,7 @@ def sync_web_model(check_only=False):
 def build_www(check_only=False):
     """Build per-device www.js from the single source template."""
     devices = build_web_devices()
-    source_text = WWW_SOURCE.read_text()
+    source_text = WWW_SOURCE.read_text(encoding="utf-8")
     source_text = replace_types(source_text)
     source_text = replace_modules(source_text)
     dirty = []
@@ -1542,7 +1549,7 @@ def build_www(check_only=False):
         generated = minify_js(replace_config(source_text, slug, cfg))
 
         if output_path.exists():
-            current = output_path.read_text()
+            current = output_path.read_text(encoding="utf-8")
             if current == generated:
                 continue
 
@@ -1550,7 +1557,7 @@ def build_www(check_only=False):
 
         if not check_only:
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_text(generated)
+            output_path.write_text(generated, encoding="utf-8")
             print(f"  updated docs/public/webserver/{slug}/www.js")
 
     if check_only and dirty:

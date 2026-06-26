@@ -95,6 +95,25 @@
       "rotation": true,
       "ethernetManualInstall": false,
       "subpages": true
+    },
+    {
+      "slug": "waveshare-esp32-s3-touch-lcd-35",
+      "installSlug": "waveshare-esp32-s3-touch-lcd-35",
+      "name": "Waveshare ESP32-S3-Touch-LCD-3.5",
+      "docsPath": "/screens/waveshare-esp32-s3-touch-lcd-35",
+      "screenSize": "3.5 inches",
+      "resolution": "320 x 480",
+      "orientation": "Portrait",
+      "slots": 6,
+      "grid": {
+        "rows": 3,
+        "cols": 2
+      },
+      "chipFamily": "ESP32-S3",
+      "relays": 0,
+      "rotation": true,
+      "ethernetManualInstall": false,
+      "subpages": true
     }
   ]
 }
