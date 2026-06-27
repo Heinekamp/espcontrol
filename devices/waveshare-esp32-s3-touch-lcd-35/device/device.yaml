@@ -308,8 +308,8 @@ audio_dac:
     i2c_id: i2c_bus
     address: 0x18
     bits_per_sample: 16bit
-    sample_rate: 48000
-    use_mclk: true
+    sample_rate: 16000
+    use_mclk: false
 
 speaker:
   - platform: i2s_audio
@@ -317,8 +317,8 @@ speaker:
     dac_type: external
     i2s_dout_pin: GPIO16
     i2s_audio_id: i2s_bus
-    sample_rate: 48000
-    i2s_mode: secondary
+    sample_rate: 16000
+    i2s_mode: primary
 
   - platform: mixer
     id: spk_mixer
